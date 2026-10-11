@@ -30,13 +30,14 @@ jobs:
       - name: Locate desktop source
         id: source
         run: |
-          if [ -f desktop-assistant/package.json ]; then
-            echo "dir=desktop-assistant" >> "$GITHUB_OUTPUT"
-            echo "output=output/desktop-assistant" >> "$GITHUB_OUTPUT"
-          else
-            echo "dir=." >> "$GITHUB_OUTPUT"
-            echo "output=../output/desktop-assistant" >> "$GITHUB_OUTPUT"
-          fi
+          node <<'NODE'
+          const fs = require('node:fs');
+          const path = require('node:path');
+          const nested = fs.existsSync('desktop-assistant/package.json');
+          const directory = nested ? 'desktop-assistant' : '.';
+          const output = path.resolve(nested ? 'output/desktop-assistant' : '../output/desktop-assistant');
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `dir=${directory}\noutput=${output}\n`);
+          NODE
       - uses: actions/setup-node@v6
         with:
           node-version: 22
