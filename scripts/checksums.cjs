@@ -1,0 +1,11 @@
+'use strict'
+const fs = require('node:fs')
+const path = require('node:path')
+const { createHash } = require('node:crypto')
+const config = require('../package.json')
+const output = path.resolve(__dirname, '..', config.build.directories.output)
+const files = fs.readdirSync(output).filter(name => name.startsWith(`DT-Zalo-Counter-`) && name.includes(config.version) && /\.(exe|dmg|AppImage|deb)$/.test(name)).sort()
+if (!files.length) throw new Error('Chưa có bộ cài cho phiên bản hiện tại.')
+const lines = files.map(name => `${createHash('sha256').update(fs.readFileSync(path.join(output, name))).digest('hex')}  ${name}`)
+fs.writeFileSync(path.join(output, `SHA256-${config.version}.txt`), lines.join('\n') + '\n')
+console.log(lines.join('\n'))

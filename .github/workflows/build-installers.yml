@@ -1,0 +1,62 @@
+name: Build desktop installers
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: ${{ matrix.platform }}-${{ matrix.arch }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { platform: win, arch: x64, runner: windows-2022 }
+          - { platform: mac, arch: x64, runner: macos-15-intel }
+          - { platform: mac, arch: arm64, runner: macos-15 }
+          - { platform: linux, arch: x64, runner: ubuntu-22.04 }
+          - { platform: linux, arch: arm64, runner: ubuntu-24.04-arm }
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: Locate desktop source
+        id: source
+        run: |
+          if [ -f desktop-assistant/package.json ]; then
+            echo "dir=desktop-assistant" >> "$GITHUB_OUTPUT"
+            echo "output=output/desktop-assistant" >> "$GITHUB_OUTPUT"
+          else
+            echo "dir=." >> "$GITHUB_OUTPUT"
+            echo "output=../output/desktop-assistant" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: ${{ steps.source.outputs.dir }}/package-lock.json
+      - name: Install, test and package
+        working-directory: ${{ steps.source.outputs.dir }}
+        run: |
+          npm ci
+          npm test
+          npm run build:${{ matrix.platform }} -- --${{ matrix.arch }}
+          npm run checksums
+      - uses: actions/upload-artifact@v4
+        with:
+          name: DT-Zalo-Counter-${{ matrix.platform }}-${{ matrix.arch }}
+          path: |
+            ${{ steps.source.outputs.output }}/DT-Zalo-Counter-*.exe
+            ${{ steps.source.outputs.output }}/DT-Zalo-Counter-*.dmg
+            ${{ steps.source.outputs.output }}/DT-Zalo-Counter-*.AppImage
+            ${{ steps.source.outputs.output }}/DT-Zalo-Counter-*.deb
+            ${{ steps.source.outputs.output }}/SHA256-*.txt
+          if-no-files-found: error
+          retention-days: 14
