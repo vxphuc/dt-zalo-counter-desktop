@@ -14,7 +14,10 @@ npm.cmd run build
 Bộ cài Windows ở `../output/desktop-assistant/DT-Zalo-Counter-Setup-1.0.1.exe`, chưa ký số.
 Phiên bản 1.0.1 thêm cấu hình macOS Intel/Apple Silicon và Linux x64/ARM64.
 Xem [CROSS_PLATFORM.md](CROSS_PLATFORM.md) để tạo DMG, AppImage, deb bằng GitHub Actions
-hoặc máy tương ứng. Chưa có bộ cài Mac/Linux được build và chạy thử trong lần sửa này.
+hoặc máy tương ứng. Repo riêng: https://github.com/vxphuc/dt-zalo-counter-desktop (Private).
+Đã build và lưu bộ cài thành công cho cả 5 OS/kiến trúc ngày 11/10/2026:
+https://github.com/vxphuc/dt-zalo-counter-desktop/actions/runs/38139419631.
+macOS/Linux vẫn cần kiểm tra giao diện trên desktop thực tế trước khi phát cho nhân viên.
 Không tự bật startup; người dùng chọn trong menu chuột phải/khay hệ thống.
 Bấm bong bóng mở popup, kéo viền di chuyển, đóng popup để ẩn, menu Thoát để dừng app.
 Always-on-top áp dụng cho cửa sổ thông thường, không vượt màn hình khóa/UAC Windows.

@@ -13,13 +13,22 @@ có phiếu riêng trước khi cấp lượt cho khách thật.
 | Linux ARM64 | `DT-Zalo-Counter-1.0.1-Linux-arm64.AppImage` hoặc `.deb` | Linux ARM64 |
 
 Đầu ra nằm trong `../output/desktop-assistant`. Cấu hình không tự upload hay publish.
-Trong lần sửa trên máy Windows này, chưa build hay thử bộ cài Mac/Linux trên máy thật.
+Đã build và lưu đủ bộ cài trên runner Windows/macOS/Linux ngày 11/10/2026.
+Chưa thử giao diện macOS/Linux trên desktop thực tế của nhân viên.
 
 ## Tạo bộ cài bằng GitHub Actions từ máy Windows
 
-Thư mục này hiện nằm ngoài repo backend/frontend. Có thể dùng làm repo riêng.
+Repo app riêng: https://github.com/vxphuc/dt-zalo-counter-desktop (Private).
+Thư mục này có Git riêng, độc lập với repo backend/frontend.
 Workflow đã chuẩn bị tại `.github/workflows/build-installers.yml`; hỗ trợ source ở
 root repo hoặc trong thư mục `desktop-assistant` của repo chứa nhiều dự án.
+
+Lượt build đã thành công: https://github.com/vxphuc/dt-zalo-counter-desktop/actions/runs/38139419631.
+Tải bộ cài ở Artifacts của trang này. Artifacts giữ 14 ngày; lưu bộ cài về máy để sử dụng lâu dài.
+Sau đó có thể build lại bằng **Actions → Build desktop installers → Run workflow**.
+Muốn thêm repo vào GitHub Desktop: **File → Add local repository**, chọn thư mục `desktop-assistant`.
+
+Các bước sau dùng khi đưa source sang repository khác:
 
 1. Đưa source app vào repository GitHub, gồm `.github`, `assets`, `scripts`, `tests`,
    các file `*.cjs`, `bubble.*`, `package.json`, `package-lock.json`, `.gitignore`, README
@@ -118,7 +127,8 @@ https://www.electronjs.org/docs/latest/api/browser-window#platform-notices.
 
 8 unit tests kiểm tra HTTPS, navigation, bounds, API theo OS, startup Linux và escape
 đường dẫn trong Desktop Entry. Schema electron-builder đã xác minh. Các test này
-không thay thế kiểm tra trên Mac/Linux thật. Workflow chưa được chạy trên GitHub.
+không thay thế kiểm tra trên Mac/Linux thật. Workflow run `38139419631` đạt đủ 5 jobs:
+Windows x64, macOS x64/ARM64, Linux x64/ARM64; mỗi job chạy đủ 8 tests trước khi đóng gói.
 Native smoke với CRM fixture trên Windows: xem README.
 Đã build EXE 1.0.1 và chạy native smoke Windows thành công: mở/ẩn bong bóng,
 đăng nhập đúng popup, 450.000đ cấp 2 lượt, tạo QR, retry không cấp trùng, renderer CRM
