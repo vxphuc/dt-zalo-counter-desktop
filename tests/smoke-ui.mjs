@@ -32,7 +32,8 @@ const requestKeys = []
 let simulateLostResponse = true
 let policy = { amount_per_play: 200000, valid_days: 7 }
 const apiRequests = []
-const products = [{ id: 'product-a', name: 'Hộp sữa', price: '150000', status: 'active' }, { id: 'product-b', name: 'Bánh quy', price: '50000', status: 'active' }]
+const products = [{ id: 'product-a', name: 'Hộp sữa', sku: 'MILK', price: '150000', status: 'active' }, ...Array.from({ length: 54 }, (_, index) => ({ id: `product-${index}`, name: `Sản phẩm ${index + 1}`, sku: `SKU${index + 1}`, price: '50000', status: 'active' })), { id: 'product-hidden', name: 'Sản phẩm đã ẩn', price: '1', status: 'inactive' }]
+const productPages = []
 function mock(url, method, raw) {
   const route = new URL(url).pathname.replace('/api/v1', '')
   const body = raw ? JSON.parse(raw) : {}
@@ -41,7 +42,15 @@ function mock(url, method, raw) {
   if (route === '/auth/login') return { data: { access_token: 'fixture-only', csrf_token: 'fixture-only', session_expires_at: Math.floor(Date.now() / 1000) + 3600, user: access.user } }
   if (route === '/auth/me') return { data: access }
   if (route === '/stores') return { data: [store], meta: { total: 1 } }
-  if (route === '/products') return { data: products, meta: { total: products.length } }
+  if (route === '/products') {
+    const params = new URL(url).searchParams
+    assert.equal(params.get('status'), 'active')
+    const search = params.get('search')?.toLowerCase() || ''
+    const page = Number(params.get('page') || 1), pageSize = Number(params.get('page_size') || 20)
+    const matches = products.filter(product => product.status === 'active' && `${product.name} ${product.sku}`.toLowerCase().includes(search))
+    productPages.push({ page, search })
+    return { data: matches.slice((page - 1) * pageSize, page * pageSize), meta: { total: matches.length, page, page_size: pageSize } }
+  }
   if (route === '/zalo/mini-apps') return { data: [{ id: 'app-a', ...store, store_id: store.id, status: 'active', mini_games: [{ id: 'game-a', key: 'golden_egg', name: 'Đập trứng tại quầy', status: 'active' }], mini_game_rewards: [{ game_id: 'game-a', voucher_id: 'gift-a', win_percentage: 100, quantity_total: 10, quantity_awarded: 0 }] }] }
   if (route === '/purchase-games/policy') { if (method === 'PUT') policy = { amount_per_play: body.amount_per_play, valid_days: body.valid_days }; return { data: policy } }
   if (route === '/purchase-games/invitations' && method === 'GET') return { data: invitations }
@@ -75,16 +84,56 @@ try {
   await bubble.eval("document.getElementById('open').click()")
   await panel.call('Page.navigate', { url: 'http://127.0.0.1:5192/desktop-assistant' })
   await until(() => panel.eval("!!document.querySelector('input[type=password]')"))
+  assert.equal(await panel.eval("!!document.querySelector('.desktop-login')"), true)
+  assert.equal(await panel.eval("document.querySelector('.login-card').innerText.includes('Cổng vận hành') || document.querySelector('.login-card').innerText.includes('Chào mừng trở lại') || document.querySelector('.login-card').innerText.includes('Đăng nhập bằng số điện thoại được cấp') || document.querySelector('.login-card').innerText.includes('Liên hệ quản trị viên')"), false)
+  assert.equal(await panel.eval("getComputedStyle(document.querySelector('.desktop-login')).zoom"), '0.8')
+  assert.equal(await panel.eval('document.documentElement.scrollHeight > window.innerHeight || document.documentElement.scrollWidth > window.innerWidth'), false)
+  const loginShot = await panel.call('Page.captureScreenshot', { format: 'png', captureBeyondViewport: true })
+  await writeFile(path.join(output, 'counter-login.png'), Buffer.from(loginShot.data, 'base64'))
+  await panel.call('Page.navigate', { url: 'http://127.0.0.1:5192/login' })
+  await until(() => panel.eval("!!document.querySelector('.login-card h2')"))
+  assert.equal(await panel.eval("!!document.querySelector('.desktop-login')"), false)
+  assert.equal(await panel.eval("!!document.querySelector('.login-help')"), true)
+  await panel.call('Page.navigate', { url: 'http://127.0.0.1:5192/desktop-assistant' })
+  await until(() => panel.eval("!!document.querySelector('.desktop-login input[type=password]')"))
   const set = async (selector, value) => panel.eval(`(() => {const el=document.querySelector(${JSON.stringify(selector)});Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(el,${JSON.stringify(value)});el.dispatchEvent(new Event('input',{bubbles:true}));el.dispatchEvent(new Event('change',{bubbles:true}));})()`)
   await set('input[inputmode=tel]', '0912345678'); await set('input[type=password]', 'fixture-password')
   await panel.eval("document.querySelector('form').requestSubmit()")
-  await until(() => panel.eval("!!document.querySelector('.counter-form') && document.querySelectorAll('.counter-product-options button').length === 2"))
+  await until(() => panel.eval("!!document.querySelector('.counter-form') && document.querySelectorAll('.counter-product-options button:not(.counter-load-more)').length === 20"))
   assert.equal(await panel.eval('location.pathname'), '/desktop-assistant')
+  await panel.eval("document.querySelector('.counter-load-more').click()")
+  await until(() => panel.eval("document.querySelectorAll('.counter-product-options button:not(.counter-load-more)').length === 40"))
+  await panel.eval("const list=document.querySelector('.counter-product-options');list.scrollTop=list.scrollHeight;list.dispatchEvent(new Event('scroll'))")
+  await until(() => panel.eval("document.querySelectorAll('.counter-product-options button:not(.counter-load-more)').length === 55"))
+  assert.equal(await panel.eval("!!document.querySelector('.counter-load-more')"), false)
+  await set('.counter-form input[placeholder="Tìm sản phẩm…"]', 'SKU54')
+  await until(() => panel.eval("document.querySelectorAll('.counter-product-options button').length === 1 && document.querySelector('.counter-product-options').innerText.includes('Sản phẩm 54')"))
+  await set('.counter-form input[placeholder="Tìm sản phẩm…"]', 'Không tồn tại')
+  await until(() => panel.eval("document.querySelector('.counter-product-options').innerText.includes('Không còn sản phẩm phù hợp')"))
+  await set('.counter-form input[placeholder="Tìm sản phẩm…"]', '')
+  await until(() => panel.eval("document.querySelectorAll('.counter-product-options button').length === 55"))
   await set('.counter-form input[type=tel]', '0912345678')
   await panel.eval("const select=document.querySelector('.counter-form select'); select.value='game-a';select.dispatchEvent(new Event('change',{bubbles:true}));document.querySelector('.counter-product-options button').click()")
   await until(() => panel.eval("!!document.querySelector('.counter-line input')"))
   await set('.counter-line input', '3')
   await until(() => panel.eval("document.querySelector('.counter-total').innerText.includes('2 lượt')"))
+  await panel.eval("document.querySelector('[aria-label=\"Thiết lập cấp lượt\"]').click()")
+  await panel.call('Emulation.setDeviceMetricsOverride', { width: 480, height: 528, deviceScaleFactor: 1, mobile: false })
+  await panel.eval('new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))')
+  const compact = await panel.call('Page.captureScreenshot', { format: 'png', captureBeyondViewport: true })
+  await writeFile(path.join(output, 'counter-compact-settings.png'), Buffer.from(compact.data, 'base64'))
+  assert.equal(await panel.eval("getComputedStyle(document.querySelector('.counter-app')).zoom"), '0.8')
+  assert.equal(await panel.eval('document.documentElement.scrollHeight > window.innerHeight'), false, 'Compact form with settings and selected product should fit a popup reduced by 20%')
+  await panel.eval("document.querySelector('.counter-product-options button').click()")
+  await until(() => panel.eval("document.querySelectorAll('.counter-line').length === 2"))
+  await panel.eval("document.querySelector('.counter-product-options button').click()")
+  await until(() => panel.eval("document.querySelectorAll('.counter-line').length === 3"))
+  assert.equal(await panel.eval('document.documentElement.scrollHeight > window.innerHeight'), false, 'Three selected products must scroll within the list, keeping submit visible')
+  await panel.eval("document.querySelectorAll('.counter-line')[2].querySelector('button').click()")
+  await until(() => panel.eval("document.querySelectorAll('.counter-line').length === 2"))
+  await panel.eval("document.querySelectorAll('.counter-line')[1].querySelector('button').click()")
+  await until(() => panel.eval("document.querySelectorAll('.counter-line').length === 1 && document.querySelector('.counter-total').innerText.includes('2 lượt')"))
+  assert.equal(await panel.eval("document.body.innerText.includes('Nhập lần mua tại quầy') || document.body.innerText.includes('Phiếu này chỉ cấp lượt') || document.body.innerText.includes('được 1 lượt, làm tròn xuống')"), false)
   const overflow = await panel.eval('document.documentElement.scrollWidth > window.innerWidth')
   if (overflow) console.log(await panel.eval("JSON.stringify({innerWidth:window.innerWidth,scrollWidth:document.documentElement.scrollWidth,wide:[...document.querySelectorAll('*')].filter(el=>el.getBoundingClientRect().right>window.innerWidth).map(el=>({tag:el.tagName,cls:el.className,width:el.getBoundingClientRect().width})).slice(0,15)})"))
   const before = await panel.call('Page.captureScreenshot', { format: 'png', captureBeyondViewport: true })
@@ -102,6 +151,6 @@ try {
   assert.equal(await panel.eval("typeof window.counterBubble"), 'undefined')
   const result = await panel.call('Page.captureScreenshot', { format: 'png', captureBeyondViewport: true })
   await writeFile(path.join(output, 'counter-result.png'), Buffer.from(result.data, 'base64'))
-  await writeFile(path.join(output, 'smoke-report.json'), JSON.stringify({ loginRedirect: true, nativeBubbleToggle: true, privateBridgeUnavailableToCRM: true, lostResponseRetryUsesSameReceipt: true, quantity: 3, total: invitations[0].total_amount, credits: 2, noHorizontalOverflow: true, apiRequests }, null, 2))
-  console.log('Native bubble, login, product quantity, private QR and renderer isolation passed.')
+  await writeFile(path.join(output, 'smoke-report.json'), JSON.stringify({ version: '1.0.3', simplifiedDesktopLogin: true, desktopFormsScale: 0.8, loginRedirect: true, nativeBubbleToggle: true, privateBridgeUnavailableToCRM: true, lostResponseRetryUsesSameReceipt: true, quantity: 3, total: invitations[0].total_amount, credits: 2, all55ProductsAccessible: true, skuSearch: true, compactSettingsFormFits528px: true, noHorizontalOverflow: true, productPages, apiRequests }, null, 2))
+  console.log('Native popup, 55 paginated products, SKU search, compact form, private QR and renderer isolation passed.')
 } finally { bubble?.ws.close(); panel?.ws.close(); child.kill() }

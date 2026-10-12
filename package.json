@@ -1,6 +1,6 @@
 {
   "name": "dt-zalo-counter-assistant",
-  "version": "1.0.1",
+  "version": "1.0.3",
   "description": "DT Zalo CRM - Trợ lý Mini Game tại quầy",
   "author": "DT Group",
   "private": true,
@@ -14,13 +14,31 @@
     "build:linux": "electron-builder --linux AppImage deb --publish never",
     "checksums": "node scripts/checksums.cjs"
   },
-  "devDependencies": { "electron": "44.7.0", "electron-builder": "26.15.3" },
+  "devDependencies": {
+    "electron": "44.7.0",
+    "electron-builder": "26.15.3"
+  },
   "build": {
     "appId": "vn.dtzalobe.counter",
     "productName": "DT Zalo - Tro ly tai quay",
-    "directories": { "output": "../output/desktop-assistant" },
-    "files": ["main.cjs", "window-policy.cjs", "platform-support.cjs", "preload.cjs", "bubble.html", "bubble.css", "bubble.js", "assets/**"],
-    "win": { "target": "nsis", "icon": "assets/icon.ico", "signAndEditExecutable": false },
+    "directories": {
+      "output": "../output/desktop-assistant"
+    },
+    "files": [
+      "main.cjs",
+      "window-policy.cjs",
+      "platform-support.cjs",
+      "preload.cjs",
+      "bubble.html",
+      "bubble.css",
+      "bubble.js",
+      "assets/**"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "assets/icon.ico",
+      "signAndEditExecutable": false
+    },
     "mac": {
       "target": "dmg",
       "icon": "assets/icon.icns",
@@ -31,13 +49,22 @@
       "artifactName": "DT-Zalo-Counter-${version}-macOS-${arch}.${ext}"
     },
     "linux": {
-      "target": ["AppImage", "deb"],
+      "target": [
+        "AppImage",
+        "deb"
+      ],
       "icon": "assets/256x256.png",
       "category": "Office",
       "maintainer": "DT Group",
       "executableName": "dt-zalo-counter",
       "artifactName": "DT-Zalo-Counter-${version}-Linux-${arch}.${ext}"
     },
-    "nsis": { "oneClick": false, "perMachine": false, "allowToChangeInstallationDirectory": true, "createDesktopShortcut": true, "artifactName": "DT-Zalo-Counter-Setup-${version}.${ext}" }
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "artifactName": "DT-Zalo-Counter-Setup-${version}.${ext}"
+    }
   }
 }

@@ -2,12 +2,13 @@
 const { app, BrowserWindow, Menu, Tray, ipcMain, screen, shell, dialog, session } = require('electron')
 const path = require('node:path')
 const fs = require('node:fs')
-const { crmUrl, sameOrigin, safeExternal, panelBounds } = require('./window-policy.cjs')
+const { crmUrl, sameOrigin, safeExternal, panelBounds, bubblePosition } = require('./window-policy.cjs')
 const { configureDesktopHost, floatWindow, loginController } = require('./platform-support.cjs')
 let bubble, panel, tray, quitting = false
 let login
 let settings = {}
 let url, origin
+let drag = null
 configureDesktopHost(app)
 if (process.env.DTCRM_USER_DATA && !app.isPackaged) app.setPath('userData', path.resolve(process.env.DTCRM_USER_DATA))
 if (!app.requestSingleInstanceLock()) app.quit()
@@ -26,6 +27,19 @@ function showPanel() {
   const area = screen.getDisplayMatching(bubble.getBounds()).workArea
   panel.setBounds(panelBounds(bubble.getBounds(), area))
   panel.show(); panel.focus()
+}
+function bubbleEvent(event) {
+  return bubble && !bubble.isDestroyed() && event.sender === bubble.webContents && event.senderFrame === bubble.webContents.mainFrame
+}
+function moveBubble() {
+  if (!drag || !bubble || bubble.isDestroyed()) return
+  const cursor = screen.getCursorScreenPoint()
+  const dx = cursor.x - drag.cursor.x, dy = cursor.y - drag.cursor.y
+  if (!drag.moved && Math.hypot(dx, dy) < 5) return
+  drag.moved = true
+  const position = bubblePosition({ x: drag.position.x + dx, y: drag.position.y + dy }, screen.getDisplayNearestPoint(cursor).workArea)
+  bubble.setPosition(position.x, position.y)
+  if (panel && !panel.isDestroyed() && panel.isVisible()) panel.setBounds(panelBounds(bubble.getBounds(), screen.getDisplayMatching(bubble.getBounds()).workArea))
 }
 function openExternal(value) {
   if (safeExternal(value)) void shell.openExternal(value).catch(() => {})
@@ -55,7 +69,7 @@ async function createWindows() {
   bubble.on('moved', () => { const bounds = bubble.getBounds(); settings.position = { x: bounds.x, y: bounds.y }; saveSettings() })
   secureContents(bubble.webContents, false)
   await bubble.loadFile(path.join(__dirname, 'bubble.html'))
-  panel = new BrowserWindow({ width: 600, height: 850, show: false, alwaysOnTop: true, backgroundColor: '#ffffff', title: 'DT Zalo - Trợ lý tại quầy', icon: path.join(__dirname, 'assets/icon.png'), autoHideMenuBar: true, webPreferences: { nodeIntegration: false, contextIsolation: true, sandbox: true } })
+  panel = new BrowserWindow({ width: 480, height: 680, show: false, alwaysOnTop: true, backgroundColor: '#ffffff', title: 'DT Zalo - Trợ lý tại quầy', icon: path.join(__dirname, 'assets/icon.png'), autoHideMenuBar: true, webPreferences: { nodeIntegration: false, contextIsolation: true, sandbox: true } })
   floatWindow(panel)
   panel.on('close', event => { if (!quitting) { event.preventDefault(); panel.hide() } })
   secureContents(panel.webContents, true)
@@ -66,6 +80,16 @@ async function createWindows() {
   })
   ipcMain.on('counter:toggle', event => { if (event.sender === bubble.webContents && event.senderFrame === bubble.webContents.mainFrame) { if (panel.isVisible()) panel.hide(); else showPanel() } })
   ipcMain.on('counter:menu', event => { if (event.sender === bubble.webContents && event.senderFrame === bubble.webContents.mainFrame) menu().popup({ window: bubble }) })
+  ipcMain.on('counter:drag-start', event => {
+    if (bubbleEvent(event)) drag = { cursor: screen.getCursorScreenPoint(), position: bubble.getBounds(), moved: false }
+  })
+  ipcMain.on('counter:drag-move', event => { if (bubbleEvent(event)) moveBubble() })
+  ipcMain.on('counter:drag-end', event => {
+    if (!bubbleEvent(event) || !drag) return
+    moveBubble()
+    if (drag.moved) { const { x, y } = bubble.getBounds(); settings.position = { x, y }; saveSettings() }
+    drag = null
+  })
   tray = new Tray(path.join(__dirname, 'assets/icon.png'))
   tray.setToolTip('DT Zalo - Trợ lý tại quầy')
   tray.setContextMenu(menu()); tray.on('click', showPanel)

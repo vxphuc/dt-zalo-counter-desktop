@@ -14,7 +14,10 @@ function safeExternal(value) {
   try { const url = new URL(value); return ['https:', 'http:'].includes(url.protocol) && !url.username && !url.password } catch { return false }
 }
 function panelBounds(bubble, area) {
-  const width = Math.min(600, area.width), height = Math.min(850, area.height)
+  const width = Math.min(480, area.width), height = Math.min(680, area.height)
   return { width, height, x: Math.max(area.x, Math.min(bubble.x - width - 12, area.x + area.width - width)), y: Math.max(area.y, Math.min(bubble.y + 78 - height, area.y + area.height - height)) }
 }
-module.exports = { crmUrl, sameOrigin, safeExternal, panelBounds }
+function bubblePosition(position, area) {
+  return { x: Math.round(Math.max(area.x, Math.min(position.x, area.x + area.width - 78))), y: Math.round(Math.max(area.y, Math.min(position.y, area.y + area.height - 78))) }
+}
+module.exports = { crmUrl, sameOrigin, safeExternal, panelBounds, bubblePosition }
