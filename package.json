@@ -1,6 +1,6 @@
 {
   "name": "dt-zalo-counter-assistant",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "DT Zalo CRM - Trợ lý Mini Game tại quầy",
   "author": "DT Group",
   "private": true,
@@ -8,15 +8,17 @@
   "scripts": {
     "start": "electron .",
     "test": "node --test tests/*.test.cjs",
-    "build": "electron-builder --win nsis --x64 --publish never",
-    "build:win": "electron-builder --win nsis --publish never",
-    "build:mac": "electron-builder --mac dmg --publish never",
-    "build:linux": "electron-builder --linux AppImage deb --publish never",
-    "checksums": "node scripts/checksums.cjs"
+    "build": "node scripts/package.cjs win --x64",
+    "build:win": "node scripts/package.cjs win",
+    "build:mac": "node scripts/package.cjs mac",
+    "build:linux": "node scripts/package.cjs linux",
+    "checksums": "node scripts/checksums.cjs",
+    "prepare-release": "node scripts/prepare-release.cjs"
   },
   "devDependencies": {
     "electron": "44.7.0",
-    "electron-builder": "26.15.3"
+    "electron-builder": "26.15.3",
+    "js-yaml": "4.3.2"
   },
   "build": {
     "appId": "vn.dtzalobe.counter",
@@ -28,6 +30,8 @@
       "main.cjs",
       "window-policy.cjs",
       "platform-support.cjs",
+      "update-controller.cjs",
+      "update-policy.json",
       "preload.cjs",
       "bubble.html",
       "bubble.css",
@@ -40,10 +44,9 @@
       "signAndEditExecutable": false
     },
     "mac": {
-      "target": "dmg",
+      "target": ["dmg", "zip"],
       "icon": "assets/icon.icns",
       "category": "public.app-category.business",
-      "identity": "-",
       "hardenedRuntime": false,
       "notarize": false,
       "artifactName": "DT-Zalo-Counter-${version}-macOS-${arch}.${ext}"
@@ -66,5 +69,8 @@
       "createDesktopShortcut": true,
       "artifactName": "DT-Zalo-Counter-Setup-${version}.${ext}"
     }
+  },
+  "dependencies": {
+    "electron-updater": "6.8.10"
   }
 }

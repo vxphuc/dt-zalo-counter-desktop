@@ -6,3 +6,5 @@ node_modules/
 Thumbs.db
 dist/
 output/
+update-policy.json
+__pycache__/

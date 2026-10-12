@@ -11,7 +11,11 @@ npm.cmd test
 npm.cmd run build
 ```
 
-Bộ cài Windows hiện tại ở `../output/desktop-assistant/DT-Zalo-Counter-Setup-1.0.3.exe`, chưa ký số.
+Bộ cài Windows hiện tại ở `../output/desktop-assistant/DT-Zalo-Counter-Setup-1.0.4.exe`, chưa ký số.
+Phiên bản 1.0.4 thêm kiểm tra/tải bản mới qua HTTPS trên VPS cho Windows, Mac đã ký
+Developer ID và Linux. Người dùng xác nhận trước khi cài; `.deb` mở trình cài của Linux.
+Xem [AUTO_UPDATE.md](AUTO_UPDATE.md) để cấu hình VPS, tạo chứng thư Apple/GitHub Secrets
+và phát hành bundle cho cả 5 OS/kiến trúc. Bản Mac chưa ký vẫn tải/cài thủ công.
 Phiên bản 1.0.3 thu cửa sổ mặc định từ 600×850 xuống 480×680. Hai form desktop
 thu nhỏ 20% và phần đăng nhập bỏ lời chào, mô tả, liên hệ quản trị. Cần cập nhật
 frontend trên VPS để nhận thay đổi nội dung/form; cài lại app để nhận kích thước cửa sổ mới.

@@ -1,11 +1,12 @@
 // Local QA only. All CRM API requests are intercepted with synthetic fixture data.
 import { spawn } from 'node:child_process'
-import { mkdir, writeFile } from 'node:fs/promises'
+import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import assert from 'node:assert/strict'
 import { fileURLToPath } from 'node:url'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
+const { version } = JSON.parse(await readFile(path.join(root, 'desktop-assistant/package.json'), 'utf8'))
 const output = path.join(root, 'output/desktop-assistant/review')
 await mkdir(output, { recursive: true })
 const port = 9338
@@ -151,6 +152,6 @@ try {
   assert.equal(await panel.eval("typeof window.counterBubble"), 'undefined')
   const result = await panel.call('Page.captureScreenshot', { format: 'png', captureBeyondViewport: true })
   await writeFile(path.join(output, 'counter-result.png'), Buffer.from(result.data, 'base64'))
-  await writeFile(path.join(output, 'smoke-report.json'), JSON.stringify({ version: '1.0.3', simplifiedDesktopLogin: true, desktopFormsScale: 0.8, loginRedirect: true, nativeBubbleToggle: true, privateBridgeUnavailableToCRM: true, lostResponseRetryUsesSameReceipt: true, quantity: 3, total: invitations[0].total_amount, credits: 2, all55ProductsAccessible: true, skuSearch: true, compactSettingsFormFits528px: true, noHorizontalOverflow: true, productPages, apiRequests }, null, 2))
+  await writeFile(path.join(output, 'smoke-report.json'), JSON.stringify({ version, simplifiedDesktopLogin: true, desktopFormsScale: 0.8, loginRedirect: true, nativeBubbleToggle: true, privateBridgeUnavailableToCRM: true, lostResponseRetryUsesSameReceipt: true, quantity: 3, total: invitations[0].total_amount, credits: 2, all55ProductsAccessible: true, skuSearch: true, compactSettingsFormFits528px: true, noHorizontalOverflow: true, productPages, apiRequests }, null, 2))
   console.log('Native popup, 55 paginated products, SKU search, compact form, private QR and renderer isolation passed.')
 } finally { bubble?.ws.close(); panel?.ws.close(); child.kill() }

@@ -58,6 +58,8 @@ test('Linux startup uses original AppImage path and never calls Windows/macOS lo
   login.set(true)
   assert.equal(login.get(), true)
   assert.ok(fs.readFileSync(file, 'utf8').includes('Exec="/home/counter/DT Zalo.AppImage"'))
+  login.set(true, '/home/counter/DT-Zalo-1.0.5.AppImage')
+  assert.ok(fs.readFileSync(file, 'utf8').includes('Exec="/home/counter/DT-Zalo-1.0.5.AppImage"'))
   fs.appendFileSync(file, 'Hidden=true\n')
   assert.equal(login.get(), false)
   login.set(false)

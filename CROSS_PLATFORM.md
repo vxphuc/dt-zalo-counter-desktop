@@ -1,4 +1,8 @@
-# Bộ cài Windows, macOS và Linux — phiên bản 1.0.1
+# Bộ cài Windows, macOS và Linux
+
+Phiên bản hiện tại: **1.0.4**. Cấu hình kênh cập nhật và ký macOS xem
+[AUTO_UPDATE.md](AUTO_UPDATE.md). Các tên file 1.0.1 và run bên dưới là bản phát hành
+đầu tiên cho nhiều OS; đổi số phiên bản theo bản bạn đang build/tải.
 
 Mã nguồn dùng chung bong bóng nổi, popup đăng nhập CRM và tạo QR cấp lượt tại quầy.
 Không đổi backend/CRM để thêm OS. Vẫn cần BE/migration `a6d8e0f2b417`, CRM và Mini App
@@ -39,7 +43,8 @@ Các bước sau dùng khi đưa source sang repository khác:
 4. Các máy build chạy test rồi tạo bộ cài theo từng OS/kiến trúc, không tạo Release.
 5. Khi job thành công, tải **Artifacts** tương ứng `DT-Zalo-Counter-mac-arm64`,
    `DT-Zalo-Counter-mac-x64`, `DT-Zalo-Counter-linux-x64`… và giải nén để lấy bộ cài.
-   File `SHA256-1.0.1.txt` đi kèm ghi hash của bộ cài.
+   Từ 1.0.4, `release.json` đi kèm ghi SHA256 của từng file; artifact
+   `DT-Zalo-Counter-VPS-update-bundle` chứa bộ phát hành để upload VPS.
 
 Workflow chỉ chạy thủ công. Mac/Linux cần được thử trên máy thật trước khi phát
 cho nhân viên; workflow build thành công chưa xác nhận hành vi cửa sổ trên mọi desktop.
@@ -105,7 +110,7 @@ chmod +x DT-Zalo-Counter-1.0.1-Linux-x64.AppImage
 AppImage cần FUSE theo cấu hình bản phân phối; nếu máy không hỗ trợ thì dùng `.deb`
 trên Ubuntu/Debian. Không xóa/di chuyển AppImage sau khi bật khởi động cùng máy.
 
-Bấm bong bóng để mở popup, kéo viền để di chuyển. Khởi động cùng máy mặc định tắt;
+Bấm bong bóng để mở popup, giữ/kéo tại bất kỳ vị trí trên bong bóng để di chuyển. Khởi động cùng máy mặc định tắt;
 bật bằng menu chuột phải hoặc khay hệ thống. Linux tạo riêng
 `~/.config/autostart/vn.dtzalobe.counter.desktop` (hoặc thư mục `XDG_CONFIG_HOME`),
 và xóa đúng file này khi tắt tùy chọn. Bản chạy dev không đăng ký startup.

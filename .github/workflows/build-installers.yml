@@ -2,6 +2,11 @@ name: Build desktop installers
 
 on:
   workflow_dispatch:
+    inputs:
+      sign_macos:
+        description: 'Ký Developer ID và notarize macOS (cần đủ GitHub Secrets)'
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -43,21 +48,91 @@ jobs:
           node-version: 22
           cache: npm
           cache-dependency-path: ${{ steps.source.outputs.dir }}/package-lock.json
-      - name: Install, test and package
+      - name: Install and test
         working-directory: ${{ steps.source.outputs.dir }}
         run: |
           npm ci
           npm test
+          python -m unittest discover -s tests -p 'test_*.py'
+      - name: Package installers
+        working-directory: ${{ steps.source.outputs.dir }}
+        env:
+          DT_MAC_SIGNED: ${{ inputs.sign_macos && 'true' || 'false' }}
+          CSC_LINK: ${{ matrix.platform == 'mac' && secrets.MAC_CSC_LINK || '' }}
+          CSC_KEY_PASSWORD: ${{ matrix.platform == 'mac' && secrets.MAC_CSC_KEY_PASSWORD || '' }}
+          APPLE_ID: ${{ matrix.platform == 'mac' && secrets.APPLE_ID || '' }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ matrix.platform == 'mac' && secrets.APPLE_APP_SPECIFIC_PASSWORD || '' }}
+          APPLE_TEAM_ID: ${{ matrix.platform == 'mac' && secrets.APPLE_TEAM_ID || '' }}
+        run: |
           npm run build:${{ matrix.platform }} -- --${{ matrix.arch }}
           npm run checksums
+          npm run prepare-release -- ${{ matrix.platform }} ${{ matrix.arch }}
+      - name: Verify signed Mac app
+        if: matrix.platform == 'mac' && inputs.sign_macos
+        env:
+          OUTPUT: ${{ steps.source.outputs.output }}
+          ARCH: ${{ matrix.arch }}
+        run: |
+          suffix=""
+          if [ "$ARCH" = "arm64" ]; then suffix="-arm64"; fi
+          mac_app="$OUTPUT/mac$suffix/DT Zalo - Tro ly tai quay.app"
+          codesign --verify --deep --strict --verbose=2 "$mac_app"
+          codesign -dv --verbose=4 "$mac_app" 2>&1 | grep -F 'Authority=Developer ID Application:'
+          spctl --assess --verbose --type exec "$mac_app"
+          xcrun stapler validate "$mac_app"
       - uses: actions/upload-artifact@v4
         with:
           name: DT-Zalo-Counter-${{ matrix.platform }}-${{ matrix.arch }}
-          path: |
-            ${{ steps.source.outputs.output }}/DT-Zalo-Counter-*.exe
-            ${{ steps.source.outputs.output }}/DT-Zalo-Counter-*.dmg
-            ${{ steps.source.outputs.output }}/DT-Zalo-Counter-*.AppImage
-            ${{ steps.source.outputs.output }}/DT-Zalo-Counter-*.deb
-            ${{ steps.source.outputs.output }}/SHA256-*.txt
+          path: ${{ steps.source.outputs.output }}/update-bundle/${{ matrix.platform }}-${{ matrix.arch }}/
+          if-no-files-found: error
+          retention-days: 14
+
+  update-bundle:
+    name: Bundle for VPS
+    needs: build
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: DT-Zalo-Counter-*
+          path: release-channels
+      - name: Assemble and verify publish ZIP
+        run: |
+          python <<'PY'
+          import importlib.util, pathlib, zipfile, shutil
+          root = pathlib.Path('.')
+          source = root / 'desktop-assistant' if (root / 'desktop-assistant/package.json').exists() else root
+          deployment = source / 'deployment'
+          destination = root / 'vps-package'
+          destination.mkdir()
+          archive = destination / 'desktop-updates.zip'
+          expected = {'win-x64', 'mac-x64', 'mac-arm64', 'linux-x64', 'linux-arm64'}
+          with zipfile.ZipFile(archive, 'w', compression=zipfile.ZIP_STORED) as bundle:
+              for folder in sorted((root / 'release-channels').iterdir()):
+                  channel = folder.name.removeprefix('DT-Zalo-Counter-')
+                  if channel not in expected:
+                      raise ValueError('Unexpected artifact channel')
+                  expected.remove(channel)
+                  for file in sorted(folder.iterdir()):
+                      if not file.is_file():
+                          raise ValueError('Unexpected nested artifact path')
+                      bundle.write(file, channel + '/' + file.name)
+          if expected:
+              raise ValueError('Missing installer channels')
+          spec = importlib.util.spec_from_file_location('publish', deployment / 'publish-updates.py')
+          publish = importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(publish)
+          publish.verify_bundle(archive)
+          shutil.copy2(deployment / 'publish-updates.py', destination)
+          shutil.copy2(deployment / 'nginx-location.conf', destination)
+          shutil.copy2(source / 'AUTO_UPDATE.md', destination)
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: DT-Zalo-Counter-VPS-update-bundle
+          path: vps-package/
           if-no-files-found: error
           retention-days: 14
