@@ -31,7 +31,6 @@ test('only local bubble can move native window; drag follows cursor, clamps and 
       if (name === 'electron') return { app, BrowserWindow: FakeWindow, Menu: { buildFromTemplate: () => ({ popup() {} }) }, Tray, ipcMain: ipc, screen: { getPrimaryDisplay: () => ({ workArea: area }), getDisplayNearestPoint: () => ({ workArea: area }), getDisplayMatching: () => ({ workArea: area }), getCursorScreenPoint: () => cursor }, shell: {}, dialog: {}, session: { defaultSession: { setPermissionRequestHandler() {} } } }
       if (name === 'node:fs') return { mkdirSync() {}, readFileSync: () => '{}', writeFileSync: (_, data) => writes.push(JSON.parse(data)) }
       if (name === './window-policy.cjs') return policy
-      if (name === './update-controller.cjs') return { createUpdateController: () => ({ start() {}, menuItems: () => [] }) }
       if (name === './platform-support.cjs') return { configureDesktopHost() {}, floatWindow() {}, loginController: () => ({ enabled: false, get: () => false }) }
       return require(name)
     },

@@ -4,10 +4,8 @@ const path = require('node:path')
 const fs = require('node:fs')
 const { crmUrl, sameOrigin, safeExternal, panelBounds, bubblePosition } = require('./window-policy.cjs')
 const { configureDesktopHost, floatWindow, loginController } = require('./platform-support.cjs')
-const { createUpdateController } = require('./update-controller.cjs')
 let bubble, panel, tray, quitting = false
 let login
-let updates
 let settings = {}
 let url, origin
 let drag = null
@@ -94,24 +92,13 @@ async function createWindows() {
   })
   tray = new Tray(path.join(__dirname, 'assets/icon.png'))
   tray.setToolTip('DT Zalo - Trợ lý tại quầy')
-  updates = createUpdateController({ app, dialog, shell, getWindow: () => panel,
-    onChange: () => { if (tray) tray.setContextMenu(menu()) },
-    beforeInstall: () => { saveSettings(); quitting = true },
-    onInstallFailure: () => { quitting = false },
-    onAppImagePathChanged: filename => {
-      try { if (login.get()) login.set(true, filename) }
-      catch { dialog.showErrorBox('Khởi động cùng Linux', 'App đã cập nhật nhưng chưa đổi được đường dẫn khởi động cùng máy. Bật lại tùy chọn này trong bản mới.') }
-    },
-  })
   tray.setContextMenu(menu()); tray.on('click', showPanel)
-  updates.start()
 }
 function menu() {
   return Menu.buildFromTemplate([
     { label: 'Mở nhập mua hàng', click: showPanel },
     { label: 'Mở CRM trong trình duyệt', click: () => openExternal(origin) },
     { label: 'Tải lại CRM', click: () => { void panel.loadURL(url).catch(() => {}); showPanel() } },
-    ...(updates ? [{ type: 'separator' }, ...updates.menuItems(), { type: 'separator' }] : []),
     { label: `Khởi động cùng ${process.platform === 'darwin' ? 'macOS' : process.platform === 'linux' ? 'Linux' : 'Windows'}`, type: 'checkbox', enabled: login.enabled, checked: login.get(), click: item => {
       try { login.set(item.checked) }
       catch (error) { dialog.showErrorBox('Không thiết lập được khởi động cùng máy', error.message) }

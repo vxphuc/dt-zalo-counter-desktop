@@ -34,9 +34,9 @@ function loginController(app, { platform = process.platform, env = process.env, 
       try { return !/^(Hidden=true|X-GNOME-Autostart-enabled=false)$/m.test(fs.readFileSync(file, 'utf8')) }
       catch { return false }
     },
-    set: (enabled, updatedExecutable) => {
+    set: enabled => {
       if (!enabled) { fs.rmSync(file, { force: true }); return }
-      const entry = desktopEntry(updatedExecutable || env.APPIMAGE || executable)
+      const entry = desktopEntry(env.APPIMAGE || executable)
       fs.mkdirSync(path.dirname(file), { recursive: true, mode: 0o700 })
       fs.writeFileSync(file, entry, { mode: 0o600 })
     },
