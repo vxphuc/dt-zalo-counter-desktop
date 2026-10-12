@@ -35,11 +35,18 @@ let policy = { amount_per_play: 200000, valid_days: 7 }
 const apiRequests = []
 const products = [{ id: 'product-a', name: 'Hộp sữa', sku: 'MILK', price: '150000', status: 'active' }, ...Array.from({ length: 54 }, (_, index) => ({ id: `product-${index}`, name: `Sản phẩm ${index + 1}`, sku: `SKU${index + 1}`, price: '50000', status: 'active' })), { id: 'product-hidden', name: 'Sản phẩm đã ẩn', price: '1', status: 'inactive' }]
 const productPages = []
+const redeemedVouchers = new Set()
+let presentationUrl = null
 function mock(url, method, raw) {
   const route = new URL(url).pathname.replace('/api/v1', '')
   const body = raw ? JSON.parse(raw) : {}
   if (method === 'OPTIONS') return {}
   apiRequests.push({ route, method })
+  if (route === '/public/storefront/mini-game-presentation') return { data: {
+    store, game: { id: 'game-a', key: 'golden_egg', name: 'Đập trứng tại quầy', status: 'active' },
+    logo_url: null, participation_url: presentationUrl, prizes: [{ id: 'gift', title: 'Bình giữ nhiệt', quantity_total: 100, quantity_awarded: 0 }],
+    winners: [], winner_total: 0, page: 1, page_size: 6,
+  } }
   if (route === '/auth/login') return { data: { access_token: 'fixture-only', csrf_token: 'fixture-only', session_expires_at: Math.floor(Date.now() / 1000) + 3600, user: access.user } }
   if (route === '/auth/me') return { data: access }
   if (route === '/stores') return { data: [store], meta: { total: 1 } }
@@ -53,6 +60,16 @@ function mock(url, method, raw) {
     return { data: matches.slice((page - 1) * pageSize, page * pageSize), meta: { total: matches.length, page, page_size: pageSize } }
   }
   if (route === '/zalo/mini-apps') return { data: [{ id: 'app-a', ...store, store_id: store.id, status: 'active', mini_games: [{ id: 'game-a', key: 'golden_egg', name: 'Đập trứng tại quầy', status: 'active' }], mini_game_rewards: [{ game_id: 'game-a', voucher_id: 'gift-a', win_percentage: 100, quantity_total: 10, quantity_awarded: 0 }] }] }
+  if (route === '/purchase-games/vouchers/check') {
+    const kind = body.code === 'GIAM10' ? 'percentage' : 'gift'
+    const used = redeemedVouchers.has(body.code)
+    return { data: { id: body.code, title: kind === 'gift' ? 'Bình giữ nhiệt' : 'Giảm 10%', code: body.code, customer_name: 'Khách thử nghiệm', phone_masked: '8491*****678', discount_type: kind, discount_value: kind === 'gift' ? '0' : '10', minimum_order_amount: '200000', maximum_discount_amount: '30000', valid_until: '2026-10-19T07:00:00Z', status: used ? 'redeemed' : 'claimed', redeemable: !used, reason: used ? 'Phiếu đã sử dụng' : '', purchase_amount: String(body.purchase_amount), discount_amount: kind === 'gift' ? '0' : String(Math.min(body.purchase_amount * .1, 30000)) } }
+  }
+  if (route.startsWith('/purchase-games/vouchers/claims/') && method === 'POST') {
+    const id = route.split('/')[4]
+    redeemedVouchers.add(id)
+    return { data: { id, status: 'redeemed', already_redeemed: false } }
+  }
   if (route === '/purchase-games/policy') { if (method === 'PUT') policy = { amount_per_play: body.amount_per_play, valid_days: body.valid_days }; return { data: policy } }
   if (route === '/purchase-games/invitations' && method === 'GET') return { data: invitations }
   if (route === '/purchase-games/invitations' && method === 'POST') {
@@ -61,6 +78,7 @@ function mock(url, method, raw) {
     const total = body.items.reduce((sum, row) => sum + Number(products.find(p => p.id === row.product_id).price) * row.quantity, 0)
     const item = { id: `invite-${++issued}`, phone_masked: '8491*****678', game_name: 'Đập trứng tại quầy', total_amount: String(total), credits: Math.floor(total / policy.amount_per_play), remaining: Math.floor(total / policy.amount_per_play), amount_per_play: policy.amount_per_play, expires_at: '2026-10-17T07:00:00Z', participation_url: 'https://zalo.me/s/fixture/?purchase_invitation_id=fixture-private', items: body.items }
     receipts.set(body.request_key, item)
+    presentationUrl = item.participation_url
     invitations = [item, ...invitations]; return { data: item }
   }
   throw new Error(`Unmocked API: ${route}`)
@@ -140,10 +158,15 @@ try {
   const before = await panel.call('Page.captureScreenshot', { format: 'png', captureBeyondViewport: true })
   await writeFile(path.join(output, 'counter-form.png'), Buffer.from(before.data, 'base64'))
   assert.equal(overflow, false)
+  await panel.eval("document.querySelector('[aria-label=\"Thiết lập cấp lượt\"]').click()")
+  await panel.call('Emulation.clearDeviceMetricsOverride')
+  await panel.eval('new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))')
+  const nativeForm = await panel.call('Page.captureScreenshot', { format: 'png', captureBeyondViewport: true })
+  await writeFile(path.join(output, 'counter-native-form.png'), Buffer.from(nativeForm.data, 'base64'))
   await panel.eval("document.querySelector('.counter-form').requestSubmit()")
   await until(() => panel.eval("document.querySelector('.counter-submit')?.innerText.includes('Thử lại')"))
   await panel.eval("document.querySelector('.counter-form').requestSubmit()")
-  await until(() => panel.eval("!!document.querySelector('.counter-result img')"))
+  await until(() => panel.eval("!!document.querySelector('.counter-toast')"))
   assert.equal(issued, 1)
   assert.equal(requestKeys.length, 2)
   assert.equal(new Set(requestKeys).size, 1)
@@ -152,6 +175,43 @@ try {
   assert.equal(await panel.eval("typeof window.counterBubble"), 'undefined')
   const result = await panel.call('Page.captureScreenshot', { format: 'png', captureBeyondViewport: true })
   await writeFile(path.join(output, 'counter-result.png'), Buffer.from(result.data, 'base64'))
-  await writeFile(path.join(output, 'smoke-report.json'), JSON.stringify({ version, simplifiedDesktopLogin: true, desktopFormsScale: 0.8, loginRedirect: true, nativeBubbleToggle: true, privateBridgeUnavailableToCRM: true, lostResponseRetryUsesSameReceipt: true, quantity: 3, total: invitations[0].total_amount, credits: 2, all55ProductsAccessible: true, skuSearch: true, compactSettingsFormFits528px: true, noHorizontalOverflow: true, productPages, apiRequests }, null, 2))
-  console.log('Native popup, 55 paginated products, SKU search, compact form, private QR and renderer isolation passed.')
+  assert.equal(await bubble.eval('getComputedStyle(document.body).width'), '66px')
+  assert.ok(await bubble.eval('window.innerWidth >= 66 && window.innerWidth <= 68'), 'Windows display scaling may round the native viewport by two pixels')
+  assert.equal(await panel.eval("document.querySelector('.counter-form input[type=tel]').value"), '')
+  assert.equal(await panel.eval("document.querySelector('.counter-form select').value"), 'game-a')
+  assert.equal(await panel.eval("document.querySelectorAll('.counter-line').length"), 0)
+  assert.equal(await panel.eval("!!document.querySelector('.counter-result')"), false)
+  await until(() => panel.eval("!document.querySelector('.counter-toast')"))
+  await panel.eval("document.querySelectorAll('.counter-tabs button')[1].click()")
+  for (const code of ['gift-private', 'GIAM10']) {
+    await set('.counter-voucher-form input[maxlength]', code)
+    await set('.counter-voucher-form input[type=tel]', '0912345678')
+    await set('.counter-voucher-form input[type=number]', '300000')
+    await panel.eval("document.querySelector('.counter-voucher-form').requestSubmit()")
+    await until(() => panel.eval("!!document.querySelector('.counter-voucher-review .primary-button')"))
+    const voucherShot = await panel.call('Page.captureScreenshot', { format: 'png', captureBeyondViewport: true })
+    await writeFile(path.join(output, `counter-voucher-${code}.png`), Buffer.from(voucherShot.data, 'base64'))
+    await panel.eval("document.querySelector('.counter-voucher-review .primary-button').click()")
+    await until(() => panel.eval("!!document.querySelector('.counter-toast') && !document.querySelector('.counter-voucher-review')"))
+    await panel.eval("document.querySelector('[aria-label=\"Đóng thông báo\"]').click()")
+    assert.equal(await panel.eval("!!document.querySelector('.counter-toast')"), false)
+    await set('.counter-voucher-form input[maxlength]', code)
+    await set('.counter-voucher-form input[type=tel]', '0912345678')
+    await set('.counter-voucher-form input[type=number]', '300000')
+    await panel.eval("document.querySelector('.counter-voucher-form').requestSubmit()")
+    await until(() => panel.eval("document.querySelector('.counter-voucher-review')?.innerText.includes('Phiếu đã sử dụng')"))
+    assert.equal(await panel.eval("!!document.querySelector('.counter-voucher-review .primary-button')"), false)
+  }
+  assert.equal(redeemedVouchers.size, 2)
+  await panel.call('Page.navigate', { url: 'http://127.0.0.1:5192/mini-game-presentation?token=fixture' })
+  await until(() => panel.eval("!!document.querySelector('.mg-display-qr img')"))
+  const qr1 = await panel.eval("document.querySelector('.mg-display-qr img').src")
+  presentationUrl = null // Simulate verified customer acknowledging the invitation.
+  await until(() => panel.eval("!document.querySelector('.mg-display-qr img') && document.body.innerText.includes('Chờ cửa hàng cấp QR cá nhân tiếp theo')"))
+  presentationUrl = invitations[0].participation_url + '&next=2'
+  await until(() => panel.eval("!!document.querySelector('.mg-display-qr img')"))
+  assert.notEqual(await panel.eval("document.querySelector('.mg-display-qr img').src"), qr1)
+
+  await writeFile(path.join(output, 'smoke-report.json'), JSON.stringify({ version, simplifiedDesktopLogin: true, desktopFormsScale: 0.8, loginRedirect: true, nativeBubbleToggle: true, bubbleSize: 66, successToastAutoDismiss: true, successToastManualDismiss: true, voucherGiftAndDiscount: true, voucherDoubleUseBlocked: true, privateBridgeUnavailableToCRM: true, lostResponseRetryUsesSameReceipt: true, quantity: 3, total: invitations[0].total_amount, credits: 2, all55ProductsAccessible: true, skuSearch: true, compactSettingsFormFits528px: true, noHorizontalOverflow: true, productPages, apiRequests }, null, 2))
+  console.log('Native popup, 55 paginated products, SKU search, compact form, 3-second toast, voucher redemption and renderer isolation passed.')
 } finally { bubble?.ws.close(); panel?.ws.close(); child.kill() }

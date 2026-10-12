@@ -1,4 +1,5 @@
 'use strict'
+const BUBBLE_SIZE = 66
 
 function crmUrl(value = 'https://dtzalobe.io.vn', development = false) {
   const url = new URL(value)
@@ -15,9 +16,9 @@ function safeExternal(value) {
 }
 function panelBounds(bubble, area) {
   const width = Math.min(480, area.width), height = Math.min(680, area.height)
-  return { width, height, x: Math.max(area.x, Math.min(bubble.x - width - 12, area.x + area.width - width)), y: Math.max(area.y, Math.min(bubble.y + 78 - height, area.y + area.height - height)) }
+  return { width, height, x: Math.max(area.x, Math.min(bubble.x - width - 12, area.x + area.width - width)), y: Math.max(area.y, Math.min(bubble.y + BUBBLE_SIZE - height, area.y + area.height - height)) }
 }
 function bubblePosition(position, area) {
-  return { x: Math.round(Math.max(area.x, Math.min(position.x, area.x + area.width - 78))), y: Math.round(Math.max(area.y, Math.min(position.y, area.y + area.height - 78))) }
+  return { x: Math.round(Math.max(area.x, Math.min(position.x, area.x + area.width - BUBBLE_SIZE))), y: Math.round(Math.max(area.y, Math.min(position.y, area.y + area.height - BUBBLE_SIZE))) }
 }
-module.exports = { crmUrl, sameOrigin, safeExternal, panelBounds, bubblePosition }
+module.exports = { BUBBLE_SIZE, crmUrl, sameOrigin, safeExternal, panelBounds, bubblePosition }

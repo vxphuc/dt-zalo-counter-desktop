@@ -37,6 +37,8 @@ test('only local bubble can move native window; drag follows cursor, clamps and 
   })
   await ready
   const [bubble, panel] = windows, start = bubble.getBounds()
+  assert.equal(start.width, 66)
+  assert.equal(start.height, 66)
   const local = { sender: bubble.webContents, senderFrame: bubble.webContents.mainFrame }
   const remote = { sender: panel.webContents, senderFrame: panel.webContents.mainFrame }
   ipc.emit('counter:drag-start', remote); cursor = { x: 900, y: 400 }; ipc.emit('counter:drag-move', remote)

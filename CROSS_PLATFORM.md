@@ -1,11 +1,11 @@
 # Bộ cài Windows, macOS và Linux
 
-Phiên bản hiện tại là **1.0.5**, cập nhật thủ công bằng cách tải bộ cài rồi cài đè.
+Phiên bản hiện tại là **1.0.6**, cập nhật thủ công bằng cách tải bộ cài rồi cài đè.
 Xem [AUTO_UPDATE.md](AUTO_UPDATE.md). Các tên file 1.0.1 và run bên dưới là bản đầu
 tiên hỗ trợ nhiều OS; đổi số phiên bản theo bản bạn đang tải.
 
 Mã nguồn dùng chung bong bóng nổi, popup đăng nhập CRM và tạo QR cấp lượt tại quầy.
-Không đổi backend/CRM để thêm OS. Vẫn cần BE/migration `a6d8e0f2b417`, CRM và Mini App
+Không đổi backend/CRM để thêm OS. Vẫn cần BE/migration `b8e1c4a6d209`, CRM và Mini App
 có phiếu riêng trước khi cấp lượt cho khách thật.
 
 | Máy người dùng | Bộ cài | Nơi build |

@@ -11,7 +11,11 @@ npm.cmd test
 npm.cmd run build
 ```
 
-Bộ cài Windows hiện tại ở `../output/desktop-assistant/DT-Zalo-Counter-Setup-1.0.5.exe`, chưa ký số.
+Bộ cài Windows hiện tại ở `../output/desktop-assistant/DT-Zalo-Counter-Setup-1.0.6.exe`, chưa ký số.
+Phiên bản 1.0.6 thu bong bóng từ 78 xuống 66 px (khoảng 15%), giữ thao tác kéo và lưu vị trí.
+CRM thêm tab kiểm tra voucher/quà tại quầy, form giãn khoảng cách và thông báo cấp lượt
+tự tắt sau 3 giây. QR cá nhân xuất hiện ở trình chiếu đúng game và ẩn khi khách liên kết
+đúng SĐT nhận phiếu, chờ lần cấp tiếp theo. Cần triển khai backend/migration và frontend.
 Phiên bản 1.0.5 dùng cập nhật thủ công: tải bộ cài mới từ GitHub Actions rồi cài đè.
 Xem [AUTO_UPDATE.md](AUTO_UPDATE.md) để chọn bộ cài cho Windows/macOS/Linux và phát hành bản mới.
 Không có kiểm tra/tải bản mới trong app hoặc bundle cập nhật cần đưa lên VPS.
@@ -32,7 +36,7 @@ Bấm bong bóng mở popup, giữ và kéo bong bóng để di chuyển, đóng
 Always-on-top áp dụng cho cửa sổ thông thường, không vượt màn hình khóa/UAC Windows.
 macOS hỗ trợ các Spaces/full screen; Linux ưu tiên X11/XWayland để giữ vị trí cửa sổ nổi.
 
-App chỉ hoạt động đủ luồng khi đã cập nhật BE/migration `a6d8e0f2b417`, CRM và phát
+App chỉ hoạt động đủ luồng khi đã cập nhật BE/migration `b8e1c4a6d209`, CRM và phát
 hành Mini App có phiếu riêng. Quyền/game/tổng tiền/lượt/SĐT được backend xác minh.
 Hướng dẫn chi tiết và lệnh VPS: `../deployment/DESKTOP_PURCHASE_GAME.md`.
 

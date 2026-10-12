@@ -37,8 +37,8 @@ test('bubble stays visible on negative-coordinate and small monitor work areas',
   for (const area of [{ x: -1280, y: -720, width: 1280, height: 720 }, { x: 0, y: 30, width: 800, height: 570 }]) {
     for (const point of [{ x: -10000, y: -10000 }, { x: 10000, y: 10000 }]) {
       const position = bubblePosition(point, area)
-      assert.ok(position.x >= area.x && position.x + 78 <= area.x + area.width)
-      assert.ok(position.y >= area.y && position.y + 78 <= area.y + area.height)
+      assert.ok(position.x >= area.x && position.x + 66 <= area.x + area.width)
+      assert.ok(position.y >= area.y && position.y + 66 <= area.y + area.height)
     }
   }
 })

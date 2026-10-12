@@ -2,7 +2,7 @@
 const { app, BrowserWindow, Menu, Tray, ipcMain, screen, shell, dialog, session } = require('electron')
 const path = require('node:path')
 const fs = require('node:fs')
-const { crmUrl, sameOrigin, safeExternal, panelBounds, bubblePosition } = require('./window-policy.cjs')
+const { crmUrl, sameOrigin, safeExternal, panelBounds, bubblePosition, BUBBLE_SIZE } = require('./window-policy.cjs')
 const { configureDesktopHost, floatWindow, loginController } = require('./platform-support.cjs')
 let bubble, panel, tray, quitting = false
 let login
@@ -64,7 +64,7 @@ async function createWindows() {
   const x = Number.isFinite(position?.x) ? position.x : area.x + area.width - 96
   const y = Number.isFinite(position?.y) ? position.y : area.y + area.height - 120
   const visibleArea = screen.getDisplayNearestPoint({ x, y }).workArea
-  bubble = new BrowserWindow({ width: 78, height: 78, x: Math.max(visibleArea.x, Math.min(x, visibleArea.x + visibleArea.width - 78)), y: Math.max(visibleArea.y, Math.min(y, visibleArea.y + visibleArea.height - 78)), frame: false, transparent: true, resizable: false, maximizable: false, skipTaskbar: true, alwaysOnTop: true, title: 'DT Zalo - Bong bóng tại quầy', webPreferences: { preload: path.join(__dirname, 'preload.cjs'), nodeIntegration: false, contextIsolation: true, sandbox: true } })
+  bubble = new BrowserWindow({ width: BUBBLE_SIZE, height: BUBBLE_SIZE, x: Math.max(visibleArea.x, Math.min(x, visibleArea.x + visibleArea.width - BUBBLE_SIZE)), y: Math.max(visibleArea.y, Math.min(y, visibleArea.y + visibleArea.height - BUBBLE_SIZE)), frame: false, transparent: true, resizable: false, maximizable: false, skipTaskbar: true, alwaysOnTop: true, title: 'DT Zalo - Bong bóng tại quầy', webPreferences: { preload: path.join(__dirname, 'preload.cjs'), nodeIntegration: false, contextIsolation: true, sandbox: true } })
   floatWindow(bubble)
   bubble.on('moved', () => { const bounds = bubble.getBounds(); settings.position = { x: bounds.x, y: bounds.y }; saveSettings() })
   secureContents(bubble.webContents, false)
