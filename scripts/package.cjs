@@ -10,14 +10,20 @@ async function packageApp(platform, arch, env = process.env) {
   const pkg = require('../package.json')
   const config = structuredClone(pkg.build)
   config.publish = { provider: 'generic', url: `${UPDATE_ROOT}/${platform}-${arch}/`, useMultipleRangeRequest: false }
+  // Linux's ${arch} macro expands to amd64 for DEB and x86_64 for AppImage.
+  // Use one explicit channel architecture for both installer filenames.
+  if (platform === 'linux') config.linux.artifactName = 'DT-Zalo-Counter-${version}-Linux-' + arch + '.${ext}'
+  // GitHub passes missing Secrets as empty strings. electron-builder treats an
+  // empty CSC_LINK as a local path, so do not leave these in its environment.
+  const signingKeys = ['CSC_LINK', 'CSC_KEY_PASSWORD', 'APPLE_ID', 'APPLE_APP_SPECIFIC_PASSWORD', 'APPLE_TEAM_ID']
+  for (const key of signingKeys) if (!env[key]) delete env[key]
   let macSigned = false
   if (platform === 'mac') {
-    const keys = ['CSC_LINK', 'CSC_KEY_PASSWORD', 'APPLE_ID', 'APPLE_APP_SPECIFIC_PASSWORD', 'APPLE_TEAM_ID']
     const requested = env.DT_MAC_SIGNED === 'true'
-    if (requested && keys.some(key => !env[key])) throw new Error('Thiếu GitHub Secrets ký/notarize Mac. Xem AUTO_UPDATE.md; không dùng bản chưa ký làm kênh cập nhật.')
+    if (requested && signingKeys.some(key => !env[key])) throw new Error('Thiếu GitHub Secrets ký/notarize Mac. Xem AUTO_UPDATE.md; không dùng bản chưa ký làm kênh cập nhật.')
     macSigned = requested
     if (macSigned) delete config.mac.identity
-    else config.mac.identity = '-'
+    else { config.mac.identity = '-'; for (const key of signingKeys) delete env[key] }
     config.mac.hardenedRuntime = macSigned
     config.mac.notarize = macSigned
     if (macSigned) config.forceCodeSigning = true
