@@ -15,7 +15,7 @@ function safeExternal(value) {
   try { const url = new URL(value); return ['https:', 'http:'].includes(url.protocol) && !url.username && !url.password } catch { return false }
 }
 function panelBounds(bubble, area) {
-  const width = Math.min(480, area.width), height = Math.min(680, area.height)
+  const width = Math.min(408, area.width), height = Math.min(520, area.height)
   return { width, height, x: Math.max(area.x, Math.min(bubble.x - width - 12, area.x + area.width - width)), y: Math.max(area.y, Math.min(bubble.y + BUBBLE_SIZE - height, area.y + area.height - height)) }
 }
 function bubblePosition(position, area) {

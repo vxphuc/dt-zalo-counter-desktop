@@ -43,4 +43,12 @@ function loginController(app, { platform = process.platform, env = process.env, 
   }
 }
 
-module.exports = { configureDesktopHost, floatWindow, desktopEntry, loginController }
+function initializeLogin(login, settings) {
+  // Register once. Later launches respect menu choices and OS startup settings.
+  if (!login.enabled || typeof settings.startupEnabled === 'boolean') return false
+  if (!login.get()) login.set(true)
+  settings.startupEnabled = true
+  return true
+}
+
+module.exports = { configureDesktopHost, floatWindow, desktopEntry, loginController, initializeLogin }

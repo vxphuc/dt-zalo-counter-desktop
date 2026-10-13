@@ -109,8 +109,9 @@ chmod +x DT-Zalo-Counter-1.0.1-Linux-x64.AppImage
 AppImage cần FUSE theo cấu hình bản phân phối; nếu máy không hỗ trợ thì dùng `.deb`
 trên Ubuntu/Debian. Không xóa/di chuyển AppImage sau khi bật khởi động cùng máy.
 
-Bấm bong bóng để mở popup, giữ/kéo trên bong bóng để di chuyển. Khởi động cùng máy mặc định tắt;
-bật bằng menu chuột phải hoặc khay hệ thống. Linux tạo riêng
+Bấm bong bóng để mở popup, giữ/kéo trên bong bóng để di chuyển. Từ bản 1.0.10, lần đầu mở app đóng gói sẽ bật khởi động cùng máy;
+có thể tắt/bật bằng menu chuột phải hoặc khay hệ thống. Lựa chọn được lưu và không bị
+tự bật lại trong những lần mở tiếp theo; startup bắt đầu sau đăng nhập phiên desktop. Linux tạo riêng
 `~/.config/autostart/vn.dtzalobe.counter.desktop` (hoặc thư mục `XDG_CONFIG_HOME`),
 và xóa đúng file này khi tắt tùy chọn. Bản chạy dev không đăng ký startup.
 

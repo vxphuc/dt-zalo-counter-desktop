@@ -16,6 +16,9 @@ test('remote navigation never permits a foreign origin or executable scheme', ()
 test('popup remains inside small and multi-monitor work areas', () => {
   const area = { x: -1280, y: 0, width: 1280, height: 720 }
   const bounds = panelBounds({ x: -1250, y: 20 }, area)
+  assert.equal(bounds.width, 408)
+  assert.equal(bounds.height, 520)
   assert.ok(bounds.x >= area.x && bounds.x + bounds.width <= area.x + area.width)
   assert.ok(bounds.y >= area.y && bounds.y + bounds.height <= area.y + area.height)
+  assert.deepEqual(panelBounds({ x: 30, y: 40 }, { x: 0, y: 0, width: 320, height: 400 }), { x: 0, y: 0, width: 320, height: 400 })
 })

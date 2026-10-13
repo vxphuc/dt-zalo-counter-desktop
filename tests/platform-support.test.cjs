@@ -4,7 +4,7 @@ const assert = require('node:assert/strict')
 const fs = require('node:fs')
 const os = require('node:os')
 const path = require('node:path')
-const { configureDesktopHost, floatWindow, desktopEntry, loginController } = require('../platform-support.cjs')
+const { configureDesktopHost, floatWindow, desktopEntry, loginController, initializeLogin } = require('../platform-support.cjs')
 
 test('Linux selects X11 when available; other platforms keep their native backend', () => {
   const calls = []
@@ -74,4 +74,45 @@ test('Linux desktop entry quotes special characters and rejects injected extra k
   const restored = exec.slice(6, -1).replace(/\\\\/g, '\\').replace(/\\(["`$\\])/g, '$1').replace(/%%/g, '%')
   assert.equal(restored, '/home/user/100%/app"$`\\.AppImage')
   for (const value of ['relative/app', '/opt/app\nExec=evil', '/opt/app\rHidden=true', '/opt/app\0', '/opt/a=b']) assert.throws(() => desktopEntry(value))
+})
+
+test('packaged startup is registered once and never re-enables an OS-disabled entry', () => {
+  const calls = []
+  let registered = false
+  const login = { enabled: true, get: () => registered, set: enabled => { calls.push(enabled); registered = enabled } }
+  const settings = { position: { x: 10, y: 20 } }
+  assert.equal(initializeLogin(login, settings), true)
+  assert.equal(registered, true)
+  assert.equal(settings.startupEnabled, true)
+  assert.deepEqual(settings.position, { x: 10, y: 20 })
+  registered = false // User disabled startup in their operating system.
+  assert.equal(initializeLogin(login, JSON.parse(JSON.stringify(settings))), false)
+  assert.equal(registered, false)
+  assert.deepEqual(calls, [true])
+  assert.equal(initializeLogin(login, { startupEnabled: false }), false)
+  assert.deepEqual(calls, [true])
+})
+
+test('development does not register startup; existing registrations are preserved', () => {
+  let calls = 0
+  const login = { enabled: false, get: () => false, set: () => { calls++ } }
+  const settings = {}
+  assert.equal(initializeLogin(login, settings), false)
+  assert.deepEqual(settings, {})
+  login.enabled = true
+  login.get = () => true
+  assert.equal(initializeLogin(login, settings), true)
+  assert.equal(calls, 0)
+  assert.equal(settings.startupEnabled, true)
+})
+
+test('failed startup registration leaves first-run setup retryable', () => {
+  const settings = {}
+  const login = { enabled: true, get: () => false, set: () => { throw Error('Registration failed') } }
+  assert.throws(() => initializeLogin(login, settings), /Registration failed/)
+  assert.deepEqual(settings, {})
+  let registered = false
+  login.set = enabled => { registered = enabled }
+  assert.equal(initializeLogin(login, settings), true)
+  assert.equal(registered, true)
 })

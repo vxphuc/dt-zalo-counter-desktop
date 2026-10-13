@@ -1,4 +1,4 @@
-# Cập nhật thủ công app desktop — bản 1.0.6
+# Cập nhật thủ công app desktop — bản 1.0.10
 
 Dự án dùng cách tải bộ cài từ GitHub Actions rồi cài đè khi có bản mới.
 App không tự kiểm tra/tải bản mới. Không cần đưa bundle cập nhật 1 GB lên VPS
@@ -7,8 +7,8 @@ hoặc đăng ký Apple Developer để dùng cách phát hành này.
 ## Người dùng tải và cập nhật
 
 1. Mở https://github.com/vxphuc/dt-zalo-counter-desktop/actions và đăng nhập tài khoản
-   có quyền truy cập repo. Repo hiện private; người không có quyền cần nhận bộ cài
-   do bạn tải và gửi hoặc đặt ở một đường dẫn tải của bạn.
+   có quyền đọc repo để tải artifact. Để khách tải không cần đăng nhập, đính kèm
+   bộ cài và SHA256 vào Releases của repo public rồi gửi link release.
 2. Chọn lượt **Build desktop installers** thành công của phiên bản mới.
 3. Trong **Artifacts**, tải đúng hệ điều hành/kiến trúc rồi giải nén ZIP:
 
@@ -24,7 +24,7 @@ hoặc đăng ký Apple Developer để dùng cách phát hành này.
    **Thoát trợ lý** trước khi thay app.
 5. Cài bản mới theo hệ điều hành:
 
-- **Windows:** chạy `DT-Zalo-Counter-Setup-1.0.6.exe`, chọn cùng phạm vi người dùng
+- **Windows:** chạy `DT-Zalo-Counter-Setup-1.0.10.exe`, chọn cùng phạm vi người dùng
   và vị trí cài như bản cũ, cài đè. Không cần gỡ app trước.
 - **macOS:** mở DMG đúng loại chip, kéo app vào **Applications**, chọn **Replace**
   khi được hỏi. Chạy app từ Applications. Bản Mac dùng chữ ký ad-hoc, chưa
@@ -36,6 +36,11 @@ hoặc đăng ký Apple Developer để dùng cách phát hành này.
   `chmod +x ten-file.AppImage` và mở lại. Nếu đổi tên/đường dẫn, bật lại tùy chọn
   khởi động cùng Linux để lưu đường dẫn mới. Có thể dùng tên cố định như
   `DT-Zalo-Counter.AppImage` cho các lần thay sau.
+
+Từ 1.0.10, mở app đóng gói lần đầu sẽ đăng ký khởi động cùng phiên đăng nhập hệ điều hành.
+Menu **Khởi động cùng Windows/macOS/Linux** cho phép tắt/bật, và app lưu lựa chọn
+để không tự bật lại mỗi lần chạy. Trên Windows, startup chỉ hiện bong bóng, không tự mở form.
+Nếu Windows Startup Apps đã bị tắt, bật lại tại đó hoặc qua menu app.
 
 App giữ cùng app ID và thư mục dữ liệu khi cài đè; không xóa thư mục cấu hình để
 cập nhật. Các thay đổi giao diện CRM trên web vẫn triển khai bằng frontend trên VPS.

@@ -3,7 +3,7 @@ const { app, BrowserWindow, Menu, Tray, ipcMain, screen, shell, dialog, session 
 const path = require('node:path')
 const fs = require('node:fs')
 const { crmUrl, sameOrigin, safeExternal, panelBounds, bubblePosition, BUBBLE_SIZE } = require('./window-policy.cjs')
-const { configureDesktopHost, floatWindow, loginController } = require('./platform-support.cjs')
+const { configureDesktopHost, floatWindow, loginController, initializeLogin } = require('./platform-support.cjs')
 let bubble, panel, tray, quitting = false
 let login
 let settings = {}
@@ -54,7 +54,10 @@ function secureContents(contents, remote) {
 async function createWindows() {
   login = loginController(app)
   fs.mkdirSync(app.getPath('userData'), { recursive: true })
-  try { settings = JSON.parse(fs.readFileSync(path.join(app.getPath('userData'), 'counter-settings.json'), 'utf8')) } catch { settings = {} }
+  try {
+    const saved = JSON.parse(fs.readFileSync(path.join(app.getPath('userData'), 'counter-settings.json'), 'utf8'))
+    settings = saved && typeof saved === 'object' && !Array.isArray(saved) ? saved : {}
+  } catch { settings = {} }
   url = crmUrl(process.env.DTCRM_URL || 'https://dtzalobe.io.vn', !app.isPackaged)
   origin = new URL(url).origin
   // Remote CRM receives no native bridge, filesystem API, or Node integration.
@@ -69,7 +72,7 @@ async function createWindows() {
   bubble.on('moved', () => { const bounds = bubble.getBounds(); settings.position = { x: bounds.x, y: bounds.y }; saveSettings() })
   secureContents(bubble.webContents, false)
   await bubble.loadFile(path.join(__dirname, 'bubble.html'))
-  panel = new BrowserWindow({ width: 480, height: 680, show: false, alwaysOnTop: true, backgroundColor: '#ffffff', title: 'DT Zalo - Trợ lý tại quầy', icon: path.join(__dirname, 'assets/icon.png'), autoHideMenuBar: true, webPreferences: { nodeIntegration: false, contextIsolation: true, sandbox: true } })
+  panel = new BrowserWindow({ width: 408, height: 520, show: false, alwaysOnTop: true, backgroundColor: '#ffffff', title: 'DT Zalo - Trợ lý tại quầy', icon: path.join(__dirname, 'assets/icon.png'), autoHideMenuBar: true, webPreferences: { nodeIntegration: false, contextIsolation: true, sandbox: true } })
   floatWindow(panel)
   panel.on('close', event => { if (!quitting) { event.preventDefault(); panel.hide() } })
   secureContents(panel.webContents, true)
@@ -93,6 +96,11 @@ async function createWindows() {
   tray = new Tray(path.join(__dirname, 'assets/icon.png'))
   tray.setToolTip('DT Zalo - Trợ lý tại quầy')
   tray.setContextMenu(menu()); tray.on('click', showPanel)
+  try {
+    if (initializeLogin(login, settings)) { saveSettings(); tray.setContextMenu(menu()) }
+  } catch (error) {
+    dialog.showErrorBox('Không thiết lập được khởi động cùng máy', error.message)
+  }
 }
 function menu() {
   return Menu.buildFromTemplate([
@@ -100,7 +108,7 @@ function menu() {
     { label: 'Mở CRM trong trình duyệt', click: () => openExternal(origin) },
     { label: 'Tải lại CRM', click: () => { void panel.loadURL(url).catch(() => {}); showPanel() } },
     { label: `Khởi động cùng ${process.platform === 'darwin' ? 'macOS' : process.platform === 'linux' ? 'Linux' : 'Windows'}`, type: 'checkbox', enabled: login.enabled, checked: login.get(), click: item => {
-      try { login.set(item.checked) }
+      try { login.set(item.checked); settings.startupEnabled = item.checked; saveSettings() }
       catch (error) { dialog.showErrorBox('Không thiết lập được khởi động cùng máy', error.message) }
       if (tray) tray.setContextMenu(menu())
     } },
