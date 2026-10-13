@@ -17,7 +17,7 @@ function desktopEntry(executable) {
   if (!path.posix.isAbsolute(executable) || /[\r\n\0=]/.test(executable)) throw new Error('Đường dẫn ứng dụng không hợp lệ để khởi động cùng Linux.')
   // Desktop Entry value escaping is applied before Exec argument unquoting.
   const quoted = executable.replace(/["`$\\]/g, character => '\\' + character).replace(/\\/g, '\\\\').replace(/%/g, '%%')
-  return `[Desktop Entry]\nType=Application\nName=DT Zalo - Tro ly tai quay\nExec="${quoted}"\nTerminal=false\nX-GNOME-Autostart-enabled=true\n`
+  return `[Desktop Entry]\nType=Application\nName=Tro Ly App\nExec="${quoted}"\nTerminal=false\nX-GNOME-Autostart-enabled=true\n`
 }
 
 function loginController(app, { platform = process.platform, env = process.env, executable = process.execPath } = {}) {

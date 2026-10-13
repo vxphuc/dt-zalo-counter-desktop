@@ -1,4 +1,4 @@
-# DT Zalo — Trợ lý tại quầy
+# Tro Ly App
 
 Ứng dụng desktop với bong bóng luôn nổi và popup CRM nhập mua hàng/cấp lượt
 Mini Game riêng. Dùng CRM đang triển khai tại https://dtzalobe.io.vn/desktop-assistant.
@@ -11,7 +11,13 @@ npm.cmd test
 npm.cmd run build
 ```
 
-Bộ cài Windows hiện tại ở `../output/desktop-assistant/DT-Zalo-Counter-Setup-1.0.10.exe`, chưa ký số.
+Bộ cài Windows hiện tại ở `../output/desktop-assistant/DT-Zalo-Counter-Setup-1.0.11.exe`, chưa ký số.
+Phiên bản 1.0.11 đổi tên hiển thị/shortcut thành **Tro Ly App**, dùng `frontend/public/logo3.jpg`
+cho icon Windows, macOS, Linux, cửa sổ và khay hệ thống. Windows bật chỉnh resource EXE
+để icon không còn là Electron; chưa ký chứng thư. Giữ app ID, package name và tên executable
+Windows cũ để đường dẫn đã cài và mục startup vẫn tương thích khi cài đè.
+Xem [COUNTER_1_0_11.md](../deployment/COUNTER_1_0_11.md).
+
 Phiên bản 1.0.10 tự đăng ký khởi động cùng máy khi mở bản đóng gói lần đầu.
 Chỉ bong bóng hiện khi đăng nhập hệ điều hành; popup CRM vẫn ẩn cho tới khi bấm.
 Có thể tắt/bật qua menu chuột phải. Lựa chọn được lưu; các lần mở sau không tự bật lại

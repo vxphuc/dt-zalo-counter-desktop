@@ -1,4 +1,4 @@
-# Cập nhật thủ công app desktop — bản 1.0.10
+# Cập nhật thủ công app desktop — bản 1.0.11
 
 Dự án dùng cách tải bộ cài từ GitHub Actions rồi cài đè khi có bản mới.
 App không tự kiểm tra/tải bản mới. Không cần đưa bundle cập nhật 1 GB lên VPS
@@ -24,7 +24,7 @@ hoặc đăng ký Apple Developer để dùng cách phát hành này.
    **Thoát trợ lý** trước khi thay app.
 5. Cài bản mới theo hệ điều hành:
 
-- **Windows:** chạy `DT-Zalo-Counter-Setup-1.0.10.exe`, chọn cùng phạm vi người dùng
+- **Windows:** chạy `DT-Zalo-Counter-Setup-1.0.11.exe`, chọn cùng phạm vi người dùng
   và vị trí cài như bản cũ, cài đè. Không cần gỡ app trước.
 - **macOS:** mở DMG đúng loại chip, kéo app vào **Applications**, chọn **Replace**
   khi được hỏi. Chạy app từ Applications. Bản Mac dùng chữ ký ad-hoc, chưa

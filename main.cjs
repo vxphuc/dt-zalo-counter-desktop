@@ -67,12 +67,12 @@ async function createWindows() {
   const x = Number.isFinite(position?.x) ? position.x : area.x + area.width - 96
   const y = Number.isFinite(position?.y) ? position.y : area.y + area.height - 120
   const visibleArea = screen.getDisplayNearestPoint({ x, y }).workArea
-  bubble = new BrowserWindow({ width: BUBBLE_SIZE, height: BUBBLE_SIZE, x: Math.max(visibleArea.x, Math.min(x, visibleArea.x + visibleArea.width - BUBBLE_SIZE)), y: Math.max(visibleArea.y, Math.min(y, visibleArea.y + visibleArea.height - BUBBLE_SIZE)), frame: false, transparent: true, resizable: false, maximizable: false, skipTaskbar: true, alwaysOnTop: true, title: 'DT Zalo - Bong bóng tại quầy', webPreferences: { preload: path.join(__dirname, 'preload.cjs'), nodeIntegration: false, contextIsolation: true, sandbox: true } })
+  bubble = new BrowserWindow({ width: BUBBLE_SIZE, height: BUBBLE_SIZE, x: Math.max(visibleArea.x, Math.min(x, visibleArea.x + visibleArea.width - BUBBLE_SIZE)), y: Math.max(visibleArea.y, Math.min(y, visibleArea.y + visibleArea.height - BUBBLE_SIZE)), frame: false, transparent: true, resizable: false, maximizable: false, skipTaskbar: true, alwaysOnTop: true, title: 'Tro Ly App', icon: path.join(__dirname, 'assets/icon.png'), webPreferences: { preload: path.join(__dirname, 'preload.cjs'), nodeIntegration: false, contextIsolation: true, sandbox: true } })
   floatWindow(bubble)
   bubble.on('moved', () => { const bounds = bubble.getBounds(); settings.position = { x: bounds.x, y: bounds.y }; saveSettings() })
   secureContents(bubble.webContents, false)
   await bubble.loadFile(path.join(__dirname, 'bubble.html'))
-  panel = new BrowserWindow({ width: 408, height: 520, show: false, alwaysOnTop: true, backgroundColor: '#ffffff', title: 'DT Zalo - Trợ lý tại quầy', icon: path.join(__dirname, 'assets/icon.png'), autoHideMenuBar: true, webPreferences: { nodeIntegration: false, contextIsolation: true, sandbox: true } })
+  panel = new BrowserWindow({ width: 408, height: 520, show: false, alwaysOnTop: true, backgroundColor: '#ffffff', title: 'Tro Ly App', icon: path.join(__dirname, 'assets/icon.png'), autoHideMenuBar: true, webPreferences: { nodeIntegration: false, contextIsolation: true, sandbox: true } })
   floatWindow(panel)
   panel.on('close', event => { if (!quitting) { event.preventDefault(); panel.hide() } })
   secureContents(panel.webContents, true)
@@ -94,7 +94,7 @@ async function createWindows() {
     drag = null
   })
   tray = new Tray(path.join(__dirname, 'assets/icon.png'))
-  tray.setToolTip('DT Zalo - Trợ lý tại quầy')
+  tray.setToolTip('Tro Ly App')
   tray.setContextMenu(menu()); tray.on('click', showPanel)
   try {
     if (initializeLogin(login, settings)) { saveSettings(); tray.setContextMenu(menu()) }

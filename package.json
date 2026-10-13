@@ -1,7 +1,7 @@
 {
   "name": "dt-zalo-counter-assistant",
-  "version": "1.0.10",
-  "description": "DT Zalo CRM - Trợ lý Mini Game tại quầy",
+  "version": "1.0.11",
+  "description": "Tro Ly App - Trợ lý Mini Game tại quầy",
   "author": "DT Group",
   "private": true,
   "main": "main.cjs",
@@ -20,7 +20,7 @@
   },
   "build": {
     "appId": "vn.dtzalobe.counter",
-    "productName": "DT Zalo - Tro ly tai quay",
+    "productName": "Tro Ly App",
     "directories": {
       "output": "../output/desktop-assistant"
     },
@@ -37,7 +37,8 @@
     "win": {
       "target": "nsis",
       "icon": "assets/icon.ico",
-      "signAndEditExecutable": false
+      "signExecutable": false,
+      "executableName": "DT Zalo - Tro ly tai quay"
     },
     "mac": {
       "target": "dmg",
@@ -64,7 +65,8 @@
       "perMachine": false,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
-      "artifactName": "DT-Zalo-Counter-Setup-${version}.${ext}"
+      "artifactName": "DT-Zalo-Counter-Setup-${version}.${ext}",
+      "shortcutName": "Tro Ly App"
     }
   }
 }
