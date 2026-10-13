@@ -49,7 +49,12 @@ async function launch({ saved, registered = false, packaged = true, fail = false
         writeFileSync: (_, json) => { disk = JSON.parse(json) },
       }
       if (name === './window-policy.cjs') return policy
-      if (name === './platform-support.cjs') return { ...platform, floatWindow() {} }
+      if (name === './platform-support.cjs') return {
+        ...platform,
+        floatWindow() {},
+        // This fixture models Windows even when the test runner is Linux/macOS.
+        loginController: app => platform.loginController(app, { platform: 'win32' }),
+      }
       return require(name)
     },
   })
