@@ -1,73 +1,15 @@
-# Cập nhật thủ công app desktop — bản 1.0.11
+# Phân phối và cập nhật Tro Ly App — 1.0.12
 
-Dự án dùng cách tải bộ cài từ GitHub Actions rồi cài đè khi có bản mới.
-App không tự kiểm tra/tải bản mới. Không cần đưa bundle cập nhật 1 GB lên VPS
-hoặc đăng ký Apple Developer để dùng cách phát hành này.
+Hướng dẫn hiện tại: [Tải trên VPS và tự cập nhật](deployment/README.md).
 
-## Người dùng tải và cập nhật
+- Trang tải công khai sau triển khai: https://dtzalobe.io.vn/tai-app/
+- Windows x64: kiểm tra sau 15 giây và mỗi 6 giờ; tải nền và hỏi trước khi cài.
+- macOS Intel / Apple Silicon: tự thông báo phiên bản mới, mở link DMG để cài đè.
+  Chủ dự án chưa có chứng thư Apple nên chưa bật tự cài trên Mac.
+- Chỉ còn ba job Windows x64, Mac Intel, Mac Apple Silicon; không build Linux.
+- Người dùng 1.0.11 trở về trước phải cài đè 1.0.12 một lần để nhận chức năng mới.
+- Lỗi mạng vẫn dùng CRM bình thường; chuột phải bong bóng để kiểm tra lại.
+- Không cần cập nhật backend hoặc phát hành Mini App cho thay đổi này.
 
-1. Mở https://github.com/vxphuc/dt-zalo-counter-desktop/actions và đăng nhập tài khoản
-   có quyền đọc repo để tải artifact. Để khách tải không cần đăng nhập, đính kèm
-   bộ cài và SHA256 vào Releases của repo public rồi gửi link release.
-2. Chọn lượt **Build desktop installers** thành công của phiên bản mới.
-3. Trong **Artifacts**, tải đúng hệ điều hành/kiến trúc rồi giải nén ZIP:
-
-| Máy cần cài | Artifact |
-| --- | --- |
-| Windows 64-bit | `DT-Zalo-Counter-win-x64` |
-| Mac Intel | `DT-Zalo-Counter-mac-x64` |
-| Mac Apple Silicon M1/M2/M3/M4… | `DT-Zalo-Counter-mac-arm64` |
-| Linux 64-bit Intel/AMD | `DT-Zalo-Counter-linux-x64` |
-| Linux ARM64 | `DT-Zalo-Counter-linux-arm64` |
-
-4. Hoàn tất phiếu đang nhập, bấm chuột phải bong bóng/biểu tượng khay hệ thống →
-   **Thoát trợ lý** trước khi thay app.
-5. Cài bản mới theo hệ điều hành:
-
-- **Windows:** chạy `DT-Zalo-Counter-Setup-1.0.11.exe`, chọn cùng phạm vi người dùng
-  và vị trí cài như bản cũ, cài đè. Không cần gỡ app trước.
-- **macOS:** mở DMG đúng loại chip, kéo app vào **Applications**, chọn **Replace**
-  khi được hỏi. Chạy app từ Applications. Bản Mac dùng chữ ký ad-hoc, chưa
-  Developer ID/notarize; nếu bị chặn, xem **System Settings → Privacy & Security**
-  và chỉ xác nhận mở app bạn tin cậy theo chính sách của máy, không tắt Gatekeeper.
-- **Linux `.deb`:** cài bản mới đúng kiến trúc qua trình quản lý phần mềm, hoặc
-  `sudo apt install ./ten-bo-cai-moi.deb`. Không chạy ứng dụng bằng root.
-- **Linux AppImage:** thay file AppImage ở vị trí bạn lưu, cấp quyền chạy bằng
-  `chmod +x ten-file.AppImage` và mở lại. Nếu đổi tên/đường dẫn, bật lại tùy chọn
-  khởi động cùng Linux để lưu đường dẫn mới. Có thể dùng tên cố định như
-  `DT-Zalo-Counter.AppImage` cho các lần thay sau.
-
-Từ 1.0.10, mở app đóng gói lần đầu sẽ đăng ký khởi động cùng phiên đăng nhập hệ điều hành.
-Menu **Khởi động cùng Windows/macOS/Linux** cho phép tắt/bật, và app lưu lựa chọn
-để không tự bật lại mỗi lần chạy. Trên Windows, startup chỉ hiện bong bóng, không tự mở form.
-Nếu Windows Startup Apps đã bị tắt, bật lại tại đó hoặc qua menu app.
-
-App giữ cùng app ID và thư mục dữ liệu khi cài đè; không xóa thư mục cấu hình để
-cập nhật. Các thay đổi giao diện CRM trên web vẫn triển khai bằng frontend trên VPS.
-
-## Chủ dự án tạo bản mới
-
-Trong PowerShell, tại repo desktop:
-
-```powershell
-cd D:\LamWeb\System_ZaloOA_FullShop\desktop-assistant
-npm.cmd version patch --no-git-tag-version
-if ($LASTEXITCODE -ne 0) { throw "Không tăng được phiên bản." }
-npm.cmd test
-if ($LASTEXITCODE -ne 0) { throw "Test thất bại." }
-git status --short
-git add package.json package-lock.json
-# Thêm từng file mã nguồn bạn vừa sửa bằng git add <tên-file>.
-git commit -m "Release desktop installer"
-if ($LASTEXITCODE -ne 0) { throw "Commit chưa thành công." }
-git push origin main
-if ($LASTEXITCODE -ne 0) { throw "Push chưa thành công." }
-```
-
-Sau đó chọn **Actions → Build desktop installers → Run workflow → main**.
-Đợi đủ 5 job xanh, tải các artifact cần phát cho người dùng. Mỗi artifact gồm
-bộ cài và `SHA256-<version>.txt`. Artifacts giữ 14 ngày, nên lưu bộ cài về máy
-hoặc nơi phân phối của bạn để người dùng tải lâu dài.
-
-Bản 1.0.5 chuyển về cập nhật thủ công. Không cần thực hiện lại các bước phát hành
-bundle, Nginx hoặc GitHub Secrets trong hướng dẫn tự cập nhật trước đây.
+Các hướng dẫn cũ nói không có tự cập nhật chỉ áp dụng cho 1.0.5–1.0.11.
+Giữ nguyên thư mục cấu hình và tài khoản đăng nhập khi cài đè.

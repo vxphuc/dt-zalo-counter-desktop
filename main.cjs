@@ -4,8 +4,9 @@ const path = require('node:path')
 const fs = require('node:fs')
 const { crmUrl, sameOrigin, safeExternal, panelBounds, bubblePosition, BUBBLE_SIZE } = require('./window-policy.cjs')
 const { configureDesktopHost, floatWindow, loginController, initializeLogin } = require('./platform-support.cjs')
+const { createUpdates } = require('./updates.cjs')
 let bubble, panel, tray, quitting = false
-let login
+let login, updates
 let settings = {}
 let url, origin
 let drag = null
@@ -15,7 +16,7 @@ if (!app.requestSingleInstanceLock()) app.quit()
 else {
   app.on('second-instance', () => { if (panel) showPanel() })
   app.on('activate', () => { if (bubble && !bubble.isDestroyed()) bubble.show(); showPanel() })
-  app.on('before-quit', () => { quitting = true })
+  app.on('before-quit', () => { quitting = true; updates?.dispose() })
   app.on('window-all-closed', () => { if (quitting) app.quit() })
   app.whenReady().then(createWindows).catch(error => { dialog.showErrorBox('Không mở được trợ lý', error.message); app.quit() })
 }
@@ -95,7 +96,11 @@ async function createWindows() {
   })
   tray = new Tray(path.join(__dirname, 'assets/icon.png'))
   tray.setToolTip('Tro Ly App')
+  updates = createUpdates({ app, updater: require('electron-updater').autoUpdater, dialog,
+    openExternal: value => shell.openExternal(value), beforeInstall: () => { quitting = true },
+    onChange: () => { if (tray && !tray.isDestroyed()) tray.setContextMenu(menu()) } })
   tray.setContextMenu(menu()); tray.on('click', showPanel)
+  updates.start()
   try {
     if (initializeLogin(login, settings)) { saveSettings(); tray.setContextMenu(menu()) }
   } catch (error) {
@@ -107,6 +112,7 @@ function menu() {
     { label: 'Mở nhập mua hàng', click: showPanel },
     { label: 'Mở CRM trong trình duyệt', click: () => openExternal(origin) },
     { label: 'Tải lại CRM', click: () => { void panel.loadURL(url).catch(() => {}); showPanel() } },
+    ...(updates ? [updates.menuItem(), { label: 'Trang tải bộ cài', click: () => openExternal(updates.downloadPage) }] : []),
     { label: `Khởi động cùng ${process.platform === 'darwin' ? 'macOS' : process.platform === 'linux' ? 'Linux' : 'Windows'}`, type: 'checkbox', enabled: login.enabled, checked: login.get(), click: item => {
       try { login.set(item.checked); settings.startupEnabled = item.checked; saveSettings() }
       catch (error) { dialog.showErrorBox('Không thiết lập được khởi động cùng máy', error.message) }

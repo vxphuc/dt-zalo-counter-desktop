@@ -49,6 +49,8 @@ async function launch({ saved, registered = false, packaged = true, fail = false
         writeFileSync: (_, json) => { disk = JSON.parse(json) },
       }
       if (name === './window-policy.cjs') return policy
+      if (name === './updates.cjs') return { createUpdates: () => ({ start() {}, dispose() {}, menuItem: () => ({ label: 'Kiểm tra bản cập nhật' }), downloadPage: 'https://dtzalobe.io.vn/tai-app/' }) }
+      if (name === 'electron-updater') return { autoUpdater: {} }
       if (name === './platform-support.cjs') return {
         ...platform,
         floatWindow() {},

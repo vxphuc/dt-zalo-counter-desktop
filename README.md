@@ -1,5 +1,14 @@
 # Tro Ly App
 
+Từ **1.0.12**, tải công khai trên VPS và kiểm tra cập nhật trong app.
+Windows tự tải/cài khi người dùng đồng ý khởi động lại; Mac chưa có chứng thư
+Apple nên báo bản mới để tải DMG cài đè. Chỉ phát hành Windows/macOS.
+Xem [hướng dẫn triển khai đầy đủ](deployment/README.md).
+
+Bộ phát hành mới: `../output/desktop-assistant/<track>/<version>/publish/`.
+Các đường dẫn/bản 1.0.11 trở về trước bên dưới là lịch sử.
+
+
 Ứng dụng desktop với bong bóng luôn nổi và popup CRM nhập mua hàng/cấp lượt
 Mini Game riêng. Dùng CRM đang triển khai tại https://dtzalobe.io.vn/desktop-assistant.
 Renderer từ CRM không có Node hoặc native bridge; chỉ bong bóng local có thể mở popup.

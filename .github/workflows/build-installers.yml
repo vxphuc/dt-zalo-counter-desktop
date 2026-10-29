@@ -2,6 +2,11 @@ name: Build desktop installers
 
 on:
   workflow_dispatch:
+    inputs:
+      mac_signed:
+        description: 'Sign + notarize macOS (requires Apple/CSC secrets); otherwise Mac updates by reinstall'
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -15,11 +20,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { platform: win, arch: x64, runner: windows-2022 }
-          - { platform: mac, arch: x64, runner: macos-15-intel }
-          - { platform: mac, arch: arm64, runner: macos-15 }
-          - { platform: linux, arch: x64, runner: ubuntu-22.04 }
-          - { platform: linux, arch: arm64, runner: ubuntu-24.04-arm }
+          - { platform: win, arch: x64, track: win-x64, runner: windows-2022 }
+          - { platform: mac, arch: x64, track: mac-x64, runner: macos-15-intel }
+          - { platform: mac, arch: arm64, track: mac-arm64, runner: macos-15 }
     defaults:
       run:
         shell: bash
@@ -45,19 +48,20 @@ jobs:
           cache-dependency-path: ${{ steps.source.outputs.dir }}/package-lock.json
       - name: Install, test and package
         working-directory: ${{ steps.source.outputs.dir }}
+        env:
+          DTCRM_MAC_SIGNED: ${{ matrix.platform == 'mac' && inputs.mac_signed && '1' || '0' }}
+          CSC_LINK: ${{ matrix.platform == 'mac' && inputs.mac_signed && secrets.CSC_LINK || '' }}
+          CSC_KEY_PASSWORD: ${{ matrix.platform == 'mac' && inputs.mac_signed && secrets.CSC_KEY_PASSWORD || '' }}
+          APPLE_ID: ${{ matrix.platform == 'mac' && inputs.mac_signed && secrets.APPLE_ID || '' }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ matrix.platform == 'mac' && inputs.mac_signed && secrets.APPLE_APP_SPECIFIC_PASSWORD || '' }}
+          APPLE_TEAM_ID: ${{ matrix.platform == 'mac' && inputs.mac_signed && secrets.APPLE_TEAM_ID || '' }}
         run: |
           npm ci
           npm test
           npm run build:${{ matrix.platform }} -- --${{ matrix.arch }}
-          npm run checksums
       - uses: actions/upload-artifact@v4
         with:
           name: DT-Zalo-Counter-${{ matrix.platform }}-${{ matrix.arch }}
-          path: |
-            ${{ steps.source.outputs.output }}/DT-Zalo-Counter-*.exe
-            ${{ steps.source.outputs.output }}/DT-Zalo-Counter-*.dmg
-            ${{ steps.source.outputs.output }}/DT-Zalo-Counter-*.AppImage
-            ${{ steps.source.outputs.output }}/DT-Zalo-Counter-*.deb
-            ${{ steps.source.outputs.output }}/SHA256-*.txt
+          path: ${{ steps.source.outputs.output }}/${{ matrix.track }}/*/publish/*
           if-no-files-found: error
           retention-days: 14

@@ -1,6 +1,6 @@
 {
   "name": "dt-zalo-counter-assistant",
-  "version": "1.0.11",
+  "version": "1.0.12",
   "description": "Tro Ly App - Trợ lý Mini Game tại quầy",
   "author": "DT Group",
   "private": true,
@@ -8,11 +8,11 @@
   "scripts": {
     "start": "electron .",
     "test": "node --test tests/*.test.cjs",
-    "build": "electron-builder --win nsis --x64 --publish never",
-    "build:win": "electron-builder --win nsis --publish never",
-    "build:mac": "electron-builder --mac dmg --publish never",
-    "build:linux": "electron-builder --linux AppImage deb --publish never",
-    "checksums": "node scripts/checksums.cjs"
+    "build": "node scripts/build.cjs win --x64",
+    "build:win": "node scripts/build.cjs win",
+    "build:mac": "node scripts/build.cjs mac",
+    "checksums": "node scripts/checksums.cjs",
+    "publish:vps": "node scripts/publish-release.cjs"
   },
   "devDependencies": {
     "electron": "44.7.0",
@@ -32,33 +32,26 @@
       "bubble.html",
       "bubble.css",
       "bubble.js",
-      "assets/**"
+      "assets/**",
+      "updates.cjs",
+      "update-contract.cjs"
     ],
     "win": {
       "target": "nsis",
       "icon": "assets/icon.ico",
-      "signExecutable": false,
+      "signExecutable": true,
       "executableName": "DT Zalo - Tro ly tai quay"
     },
     "mac": {
-      "target": "dmg",
+      "target": [
+        "dmg"
+      ],
       "icon": "assets/icon.icns",
       "category": "public.app-category.business",
       "identity": "-",
       "hardenedRuntime": false,
       "notarize": false,
       "artifactName": "DT-Zalo-Counter-${version}-macOS-${arch}.${ext}"
-    },
-    "linux": {
-      "target": [
-        "AppImage",
-        "deb"
-      ],
-      "icon": "assets/256x256.png",
-      "category": "Office",
-      "maintainer": "DT Group",
-      "executableName": "dt-zalo-counter",
-      "artifactName": "DT-Zalo-Counter-${version}-Linux-${arch}.${ext}"
     },
     "nsis": {
       "oneClick": false,
@@ -68,5 +61,10 @@
       "artifactName": "DT-Zalo-Counter-Setup-${version}.${ext}",
       "shortcutName": "Tro Ly App"
     }
+  },
+  "dependencies": {
+    "electron-updater": "6.8.11",
+    "js-yaml": "4.3.2",
+    "semver": "7.7.3"
   }
 }

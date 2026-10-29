@@ -31,6 +31,8 @@ test('only local bubble can move native window; drag follows cursor, clamps and 
       if (name === 'electron') return { app, BrowserWindow: FakeWindow, Menu: { buildFromTemplate: () => ({ popup() {} }) }, Tray, ipcMain: ipc, screen: { getPrimaryDisplay: () => ({ workArea: area }), getDisplayNearestPoint: () => ({ workArea: area }), getDisplayMatching: () => ({ workArea: area }), getCursorScreenPoint: () => cursor }, shell: {}, dialog: {}, session: { defaultSession: { setPermissionRequestHandler() {} } } }
       if (name === 'node:fs') return { mkdirSync() {}, readFileSync: () => '{}', writeFileSync: (_, data) => writes.push(JSON.parse(data)) }
       if (name === './window-policy.cjs') return policy
+      if (name === './updates.cjs') return { createUpdates: () => ({ start() {}, dispose() {}, menuItem: () => ({ label: 'Kiểm tra bản cập nhật' }), downloadPage: 'https://dtzalobe.io.vn/tai-app/' }) }
+      if (name === 'electron-updater') return { autoUpdater: {} }
       if (name === './platform-support.cjs') return { ...require('../platform-support.cjs'), configureDesktopHost() {}, floatWindow() {}, loginController: () => ({ enabled: false, get: () => false }) }
       return require(name)
     },
